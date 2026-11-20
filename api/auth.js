@@ -1,100 +1,234 @@
 const { createClient } = require('@supabase/supabase-js');
+const { randomBytes } = require('crypto');
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+const {
+    getAppUrl,
+    parseCookies,
+    createSessionCookie,
+    clearSessionCookie,
+    getSession
+} = require('./_lib/security');
 
-function parseCookies(cookieHeader) {
-    const list = {};
-    if (!cookieHeader) return list;
-    cookieHeader.split(';').forEach((cookie) => {
-        const parts = cookie.split('=');
-        const key = parts.shift().trim();
-        if (key) list[key] = decodeURIComponent(parts.join('='));
-    });
-    return list;
-}
+const supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_KEY,
+    {
+        auth: {
+            persistSession: false,
+            autoRefreshToken: false
+        }
+    }
+);
+
+const OPENID_NS = 'http://specs.openid.net/auth/2.0';
+const IDENTIFIER_SELECT = OPENID_NS + '/identifier_select';
 
 module.exports = async function handler(req, res) {
-    const protocol = req.headers['x-forwarded-proto'] || 'https';
-    const host = req.headers.host;
-    const baseUrl = protocol + '://' + host;
-    const action = req.query.action;
+    try {
+        const url = new URL(req.url, getAppUrl());
+        const action = url.searchParams.get('action');
 
-    // 1. Вход через Steam OpenID
-    if (action === 'login') {
-        const openidNs = 'http://openid.net' + '/auth/2.0';
-        const openidId = openidNs + '/identifier_select';
-        const params = new URLSearchParams({
-            'openid.ns': openidNs,
-            'openid.mode': 'checkid_setup',
-            'openid.return_to': baseUrl + '/api/auth?action=callback',
-            'openid.realm': baseUrl,
-            'openid.identity': openidId,
-            'openid.claimed_id': openidId
-        });
-        const steamLoginUrl = 'https://steamcommunity.com' + '/openid/login?' + params.toString();
-        return res.redirect(steamLoginUrl);
-    }
+        if (action === 'login' && req.method === 'GET') {
+            const state = randomBytes(24).toString('hex');
 
-    // 2. Обработка ответа от Steam после авторизации
-    if (action === 'callback') {
-        const claimedId = req.query['openid.claimed_id'] || '';
-        const match = claimedId.match(/\/id\/(\d+)$/);
-        if (!match) return res.redirect('/?error=steam_auth_failed');
+            const returnTo =
+                `${getAppUrl()}/api/auth?action=callback&state=${state}`;
 
-        const steamId = match.at(1);
-        let username = 'Player_' + steamId.slice(-4);
-        let avatar = '';
+            const params = new URLSearchParams({
+                'openid.ns': OPENID_NS,
+                'openid.mode': 'checkid_setup',
+                'openid.return_to': returnTo,
+                'openid.realm': getAppUrl(),
+                'openid.identity': IDENTIFIER_SELECT,
+                'openid.claimed_id': IDENTIFIER_SELECT
+            });
 
-        if (process.env.STEAM_API_KEY) {
-            try {
-                const apiUrl = 'https://steampowered.com' + '/ISteamUser/GetPlayerSummaries/v2/?key=' + process.env.STEAM_API_KEY + '&steamids=' + steamId;
-                const stRes = await fetch(apiUrl);
-                const stData = await stRes.json();
-                const player = stData.response?.players?.at(0);
-                if (player) {
-                    username = player.personaname;
-                    avatar = player.avatarfull;
-                }
-            } catch (e) {}
+            res.setHeader('Set-Cookie',
+                `steam_login_state=${state}; Path=/; Max-Age=600; HttpOnly; Secure; SameSite=Lax`
+            );
+
+            return res.redirect(
+                'https://steamcommunity.com/openid/login?' + params.toString()
+            );
         }
 
-        await supabase.from('users').upsert({
-            steam_id: steamId,
-            username: username,
-            avatar: avatar,
-            updated_at: new Date().toISOString()
-        }, { onConflict: 'steam_id' });
+        if (action === 'callback' && req.method === 'GET') {
+            const cookies = parseCookies(req.headers.cookie);
+            const state = url.searchParams.get('state');
 
-        res.setHeader('Set-Cookie', 'steam_id=' + steamId + '; Path=/; Max-Age=2592000; SameSite=Lax');
-        return res.redirect('/#rustplus');
+            if (!state || state !== cookies.steam_login_state) {
+                return res.status(400).send('Ошибка проверки авторизации.');
+            }
+
+            const params = new URLSearchParams();
+
+            for (const [key, value] of url.searchParams.entries()) {
+                if (key.startsWith('openid.')) {
+                    params.set(key, value);
+                }
+            }
+
+            const claimedId = params.get('openid.claimed_id');
+            const identity = params.get('openid.identity');
+
+            const match = claimedId?.match(
+                /^https:\/\/steamcommunity\.com\/openid\/id\/(\d{17})\/?$/
+            );
+
+            if (
+                params.get('openid.ns') !== OPENID_NS ||
+                params.get('openid.mode') !== 'id_res' ||
+                !match ||
+                identity !== claimedId
+            ) {
+                return res.status(400).send('Некорректный ответ Steam.');
+            }
+
+            const expectedReturnTo =
+                `${getAppUrl()}/api/auth?action=callback&state=${state}`;
+
+            if (params.get('openid.return_to') !== expectedReturnTo) {
+                return res.status(400).send('Неверный адрес возврата Steam.');
+            }
+
+            params.set('openid.mode', 'check_authentication');
+
+            const verification = await fetch(
+                'https://steamcommunity.com/openid/login',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: params.toString()
+                }
+            );
+
+            const verificationText = await verification.text();
+
+            if (!verification.ok || !/^is_valid:true\s*$/m.test(verificationText)) {
+                return res.status(401).send('Steam не подтвердил авторизацию.');
+            }
+
+            const steamId = match[1];
+            let username = 'Player_' + steamId.slice(-4);
+            let avatar = '';
+
+            if (process.env.STEAM_API_KEY) {
+                try {
+                    const steamUrl = new URL(
+                        'https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/'
+                    );
+
+                    steamUrl.searchParams.set('key', process.env.STEAM_API_KEY);
+                    steamUrl.searchParams.set('steamids', steamId);
+
+                    const response = await fetch(steamUrl);
+                    const data = await response.json();
+                    const player = data.response?.players?.[0];
+
+                    if (player) {
+                        username = player.personaname;
+                        avatar = player.avatarfull;
+                    }
+                } catch (error) {
+                    console.error('Steam profile error:', error.message);
+                }
+            }
+
+            const { error } = await supabase
+                .from('users')
+                .upsert({
+                    steam_id: steamId,
+                    username,
+                    avatar,
+                    updated_at: new Date().toISOString()
+                }, {
+                    onConflict: 'steam_id'
+                });
+
+            if (error) throw error;
+
+            res.setHeader('Set-Cookie', [
+                createSessionCookie(steamId),
+                'steam_login_state=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax'
+            ]);
+
+            return res.redirect('/#rustplus');
+        }
+
+        if (action === 'me' && req.method === 'GET') {
+            const steamId = getSession(req);
+
+            if (!steamId) {
+                return res.status(200).json({ loggedIn: false });
+            }
+
+            const { data: user, error } = await supabase
+                .from('users')
+                .select('steam_id, username, avatar, notify_heli, notify_cargo, chat_commands')
+                .eq('steam_id', steamId)
+                .maybeSingle();
+
+            if (error) throw error;
+
+            if (!user) {
+                return res.status(200).json({ loggedIn: false });
+            }
+
+            return res.status(200).json({
+                loggedIn: true,
+                user
+            });
+        }
+
+        if (action === 'settings' && req.method === 'POST') {
+            const steamId = getSession(req);
+
+            if (!steamId) {
+                return res.status(401).json({ error: 'Не авторизован' });
+            }
+
+            const body = req.body || {};
+            const allowed = ['notify_heli', 'notify_cargo', 'chat_commands'];
+            const update = {};
+
+            for (const key of allowed) {
+                if (typeof body[key] === 'boolean') {
+                    update[key] = body[key];
+                }
+            }
+
+            if (!Object.keys(update).length) {
+                return res.status(400).json({ error: 'Нет настроек для сохранения.' });
+            }
+
+            const { error } = await supabase
+                .from('users')
+                .update(update)
+                .eq('steam_id', steamId);
+
+            if (error) throw error;
+
+            return res.status(200).json({ success: true });
+        }
+
+        if (action === 'logout' && req.method === 'GET') {
+            res.setHeader('Set-Cookie', [
+                clearSessionCookie(),
+                'steam_login_state=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax'
+            ]);
+
+            return res.redirect('/');
+        }
+
+        return res.status(400).json({ error: 'Неизвестное действие' });
+
+    } catch (error) {
+        console.error('Auth error:', error.message);
+
+        return res.status(500).json({
+            error: 'Ошибка авторизации. Проверь настройки сервера.'
+        });
     }
-
-    // 3. Проверка статуса пользователя
-    if (action === 'me') {
-        const cookies = parseCookies(req.headers.cookie);
-        const steamId = cookies.steam_id;
-        if (!steamId) return res.status(200).json({ loggedIn: false });
-
-        const { data: user } = await supabase.from('users').select('*').eq('steam_id', steamId).single();
-        return res.status(200).json({ loggedIn: true, user: user });
-    }
-
-    // 4. Обновление настроек радара
-    if (req.method === 'POST' && action === 'settings') {
-        const cookies = parseCookies(req.headers.cookie);
-        const steamId = cookies.steam_id;
-        if (!steamId) return res.status(401).json({ error: 'Не авторизован' });
-
-        const { notify_heli, notify_cargo, chat_commands } = req.body;
-        await supabase.from('users').update({ notify_heli: notify_heli, notify_cargo: notify_cargo, chat_commands: chat_commands }).eq('steam_id', steamId);
-        return res.status(200).json({ success: true });
-    }
-
-    // 5. Выход из аккаунта
-    if (action === 'logout') {
-        res.setHeader('Set-Cookie', 'steam_id=; Path=/; Max-Age=0');
-        return res.redirect('/');
-    }
-
-    return res.status(400).json({ error: 'Неизвестное действие' });
 };
