@@ -41,7 +41,7 @@ module.exports = async function handler(req, res) {
         const match = claimedId.match(/\/id\/(\d+)$/);
         if (!match) return res.redirect('/?error=steam_auth_failed');
 
-        const steamId = match;
+        const steamId = match.at(1);
         let username = 'Player_' + steamId.slice(-4);
         let avatar = '';
 
@@ -50,7 +50,7 @@ module.exports = async function handler(req, res) {
                 const apiUrl = 'https://steampowered.com' + '/ISteamUser/GetPlayerSummaries/v2/?key=' + process.env.STEAM_API_KEY + '&steamids=' + steamId;
                 const stRes = await fetch(apiUrl);
                 const stData = await stRes.json();
-                const player = stData.response && stData.response.players && stData.response.players;
+                const player = stData.response?.players?.at(0);
                 if (player) {
                     username = player.personaname;
                     avatar = player.avatarfull;
