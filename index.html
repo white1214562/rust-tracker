@@ -4,527 +4,368 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Rust Radar — Steam & Rust Tracker</title>
+<meta name="theme-color" content="#101114">
+<title>RUST RADAR — Steam и серверы Rust</title>
 
 <style>
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    background: #101113;
-    color: #eee;
-    font-family: Arial, sans-serif;
-}
-
-header {
-    min-height: 75px;
-    background: #17191c;
-    border-bottom: 1px solid #292c30;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 15px 8%;
-    gap: 15px;
-    flex-wrap: wrap;
-}
-
-.logo {
-    font-size: 25px;
-    font-weight: 900;
-    letter-spacing: 1px;
-}
-
-.logo span,
-.hero h1 span,
-.section-title span {
-    color: #e97832;
-}
-
-nav {
-    display: flex;
-    gap: 22px;
-    flex-wrap: wrap;
-}
-
-nav a {
-    color: #aaa;
-    text-decoration: none;
-}
-
-nav a:hover {
-    color: #e97832;
-}
-
-.hero {
-    min-height: 350px;
-    background:
-        linear-gradient(#0c0d0ee0,#0c0d0ef5),
-        radial-gradient(circle at center,#754021,#101113 70%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 50px 20px;
-    text-align: center;
-}
-
-.hero h1 {
-    font-size: 55px;
-    font-weight: 900;
-    letter-spacing: 4px;
-}
-
-.hero > p {
-    color: #999;
-    margin-top: 15px;
-}
-
-.search {
-    display: flex;
-    width: 100%;
-    max-width: 650px;
-    margin-top: 30px;
-    gap: 10px;
-}
-
-input,
-select {
-    min-width: 0;
-    padding: 14px;
-    background: #202327;
-    border: 1px solid #393d42;
-    border-radius: 5px;
-    color: white;
-    outline: none;
-}
-
-.search input {
-    flex: 1;
-}
-
-input:focus,
-select:focus {
-    border-color: #e97832;
-}
-
-button {
-    background: #e97832;
-    color: white;
-    border: 0;
-    border-radius: 5px;
-    padding: 13px 20px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-button:hover {
-    background: #ff914c;
-}
-
-button:disabled {
-    opacity: .5;
-    cursor: not-allowed;
-}
-
-#searchResult {
-    width: 100%;
-    max-width: 850px;
-    margin-top: 25px;
-    text-align: left;
-}
-
-.result {
-    background: #191b1f;
-    border: 1px solid #393d42;
-    padding: 22px;
-    border-radius: 10px;
-    box-shadow: 0 10px 35px #0005;
-}
-
-.profile-head {
-    display: flex;
-    align-items: center;
-    gap: 18px;
-}
-
-.avatar {
-    width: 90px;
-    height: 90px;
-    border-radius: 10px;
-    border: 2px solid #e97832;
-    object-fit: cover;
-}
-
-.profile-name {
-    font-size: 25px;
-    color: #e97832;
-    margin-bottom: 8px;
-    overflow-wrap: anywhere;
-}
-
-.muted {
-    font-size: 13px;
-    color: #999;
-    line-height: 1.7;
-}
-
-.profile-link {
-    display: inline-block;
-    margin-top: 15px;
-    color: #e97832;
-    text-decoration: none;
-    font-weight: bold;
-}
-
-.profile-link:hover {
-    text-decoration: underline;
-}
-
-.stats {
-    display: grid;
-    grid-template-columns: repeat(3,minmax(0,1fr));
-    gap: 12px;
-    margin-top: 22px;
-}
-
-.stat {
-    background: #22252a;
-    border: 1px solid #34383e;
-    padding: 17px;
-    border-radius: 7px;
-    min-width: 0;
-}
-
-.stat span {
-    color: #999;
-    font-size: 11px;
-    display: block;
-}
-
-.stat strong {
-    display: block;
-    color: #e97832;
-    font-size: 23px;
-    margin-top: 9px;
-    overflow-wrap: anywhere;
-}
-
-.panel {
-    margin-top: 18px;
-    background: #22252a;
-    border: 1px solid #34383e;
-    padding: 17px;
-    border-radius: 7px;
-}
-
-.panel h3 {
-    font-size: 16px;
-    margin-bottom: 13px;
-    color: #e97832;
-}
-
-.registration {
-    margin-top: 15px;
-    color: #bbb;
-    font-size: 14px;
-}
-
-.registration strong {
-    color: #eee;
-}
-
-.status {
-    padding: 12px;
-    border-radius: 6px;
-    margin-top: 12px;
-    font-size: 13px;
-}
-
-.status.good {
-    background: #173324;
-    color: #79dfa0;
-}
-
-.status.neutral {
-    background: #352b1d;
-    color: #ffc078;
-}
-
-.status.bad {
-    background: #3b2020;
-    color: #ff9999;
-}
-
-.stat-list {
-    display: grid;
-    grid-template-columns: repeat(3,minmax(0,1fr));
-    gap: 8px;
-}
-
-.stat-row {
-    background: #191b1f;
-    padding: 10px;
-    border-radius: 5px;
-    min-width: 0;
-}
-
-.stat-row span {
-    display: block;
-    color: #999;
-    font-size: 11px;
-    overflow-wrap: anywhere;
-}
-
-.stat-row strong {
-    display: block;
-    margin-top: 5px;
-    font-size: 15px;
-    overflow-wrap: anywhere;
-}
-
-.achievement {
-    padding: 10px 0;
-    border-bottom: 1px solid #34383e;
-    font-size: 13px;
-}
-
-.achievement:last-child {
-    border: 0;
-}
-
-.achievement small {
-    display: block;
-    color: #999;
-    margin-top: 4px;
-}
-
-.loading {
-    color: #aaa;
-    padding: 18px;
-    text-align: center;
-}
-
-main {
-    max-width: 1200px;
-    margin: auto;
-    padding: 40px 20px;
-}
-
-.section-title {
-    font-size: 25px;
-    margin-bottom: 25px;
-}
-
-.features {
-    display: grid;
-    grid-template-columns: repeat(3,1fr);
-    gap: 20px;
-}
-
-.feature {
-    background: #191b1f;
-    border: 1px solid #292c30;
-    border-radius: 8px;
-    padding: 25px;
-}
-
-.feature h2 {
-    font-size: 19px;
-    margin-bottom: 12px;
-}
-
-.feature p {
-    color: #999;
-    font-size: 14px;
-    line-height: 1.5;
-}
-
-.content-section {
-    margin-top: 55px;
-}
-
-.server-filters {
-    display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 18px;
-}
-
-.server-filters input,
-.server-filters select {
-    width: 100%;
-}
-
-.server {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #191b1f;
-    border: 1px solid #292c30;
-    border-radius: 7px;
-    padding: 20px;
-    margin-bottom: 12px;
-    gap: 15px;
-}
-
-.server h3 {
-    margin-bottom: 9px;
-    overflow-wrap: anywhere;
-}
-
-.server p {
-    color: #999;
-    font-size: 13px;
-    margin-top: 5px;
-}
-
-.server-online {
-    color: #65d68a;
-    font-weight: bold;
-}
-
-.server-offline {
-    color: #ff7777;
-    font-weight: bold;
-}
-
-.server-players {
-    color: #e97832;
-    font-size: 21px;
-    font-weight: bold;
-    white-space: nowrap;
-}
-
-.server-actions {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-top: 12px;
-}
-
-.server-actions a {
-    color: #e97832;
-    font-size: 12px;
-    font-weight: bold;
-    text-decoration: none;
-}
-
-.server-actions a:hover {
-    text-decoration: underline;
-}
-
-.server-meta {
-    color: #777;
-    font-size: 12px;
-    margin-top: 15px;
-}
-
-.server-pagination {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 15px;
-    margin-top: 20px;
-}
-
-.history-item {
-    background: #191b1f;
-    border: 1px solid #292c30;
-    border-radius: 6px;
-    padding: 13px;
-    margin-bottom: 10px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px;
-}
-
-.history-item strong {
-    overflow-wrap: anywhere;
-}
-
-.history-item button {
-    padding: 9px 13px;
-    flex-shrink: 0;
-}
-
-.empty {
-    color: #777;
-    padding: 20px;
-    background: #191b1f;
-    border-radius: 6px;
-}
-
-footer {
-    margin-top: 60px;
-    padding: 30px;
-    background: #17191c;
-    text-align: center;
-    color: #777;
-    font-size: 13px;
-}
-
-footer a {
-    color: #e97832;
-}
-
-@media(max-width:800px) {
-    .server-filters {
-        grid-template-columns: repeat(2,minmax(0,1fr));
-    }
-
-    .features {
-        grid-template-columns: 1fr;
-    }
-}
-
-@media(max-width:700px) {
-    header {
-        padding: 15px;
-    }
-
-    nav {
-        gap: 14px;
-        font-size: 13px;
-    }
-
-    .hero h1 {
-        font-size: 36px;
-    }
-
-    .search {
-        flex-direction: column;
-    }
-
-    .stats {
-        grid-template-columns: repeat(2,minmax(0,1fr));
-    }
-
-    .stat-list {
-        grid-template-columns: repeat(2,minmax(0,1fr));
-    }
-
-    .server {
-        align-items: flex-start;
-        flex-direction: column;
-    }
-
-    .profile-head {
-        align-items: flex-start;
-    }
-
-    .avatar {
-        width: 70px;
-        height: 70px;
-    }
-
-    .profile-name {
-        font-size: 21px;
-    }
+:root{
+  --bg:#101114;
+  --panel:#191b20;
+  --panel2:#22252b;
+  --border:#30343c;
+  --orange:#ed7936;
+  --orange2:#ff985b;
+  --text:#f2f2f2;
+  --muted:#9298a3;
+  --green:#62d58b;
+  --red:#ff7777;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:Arial,Helvetica,sans-serif;
+}
+button,input,select{font:inherit}
+button{
+  border:0;
+  border-radius:7px;
+  padding:12px 17px;
+  background:var(--orange);
+  color:white;
+  font-weight:800;
+  cursor:pointer;
+  transition:.2s;
+}
+button:hover{background:var(--orange2)}
+button:disabled{opacity:.5;cursor:not-allowed}
+input,select{
+  width:100%;
+  min-width:0;
+  padding:12px 13px;
+  color:white;
+  background:#15171b;
+  border:1px solid var(--border);
+  border-radius:7px;
+  outline:none;
+}
+input:focus,select:focus{border-color:var(--orange)}
+select option{background:#191b20;color:white}
+a{color:var(--orange);text-decoration:none}
+a:hover{text-decoration:underline}
+
+header{
+  min-height:70px;
+  padding:14px max(20px,calc((100% - 1250px)/2));
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+  background:#17191d;
+  border-bottom:1px solid var(--border);
+}
+.logo{font-size:23px;font-weight:900;letter-spacing:1px}
+.logo span,.orange{color:var(--orange)}
+nav{display:flex;gap:24px}
+nav a{color:#c1c4ca;font-size:14px;font-weight:700}
+
+.hero{
+  min-height:330px;
+  padding:55px 20px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  background:
+    radial-gradient(ellipse at 50% 0%,#713d2460,transparent 65%),
+    linear-gradient(180deg,#17191d,#101114);
+}
+.hero h1{font-size:clamp(38px,7vw,65px);font-weight:1000;letter-spacing:3px}
+.hero p{margin-top:12px;color:var(--muted);line-height:1.6}
+.player-search{
+  display:flex;
+  width:100%;
+  max-width:680px;
+  gap:10px;
+  margin-top:28px;
+}
+.player-search input{padding:16px}
+#searchResult{width:100%;max-width:850px;margin-top:20px;text-align:left}
+
+main{max-width:1250px;margin:auto;padding:38px 20px}
+.section{margin-bottom:48px}
+.section-title{font-size:25px;margin-bottom:20px}
+.section-title span{color:var(--orange)}
+
+.features{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:15px;
+}
+.feature{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:20px;
+}
+.feature h3{font-size:16px;margin-bottom:9px}
+.feature p{font-size:13px;color:var(--muted);line-height:1.6}
+
+.toolbar{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:17px;
+  margin-bottom:20px;
+}
+.filters{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:12px;
+}
+.field label{
+  display:block;
+  color:var(--muted);
+  font-size:11px;
+  font-weight:800;
+  margin-bottom:7px;
+  text-transform:uppercase;
+  letter-spacing:.5px;
+}
+.filter-actions{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:14px;
+}
+.secondary{
+  background:#30343c;
+  color:#eee;
+}
+.secondary:hover{background:#414752}
+.favorite-filter{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color:#d4d6da;
+  font-size:13px;
+  cursor:pointer;
+}
+.favorite-filter input{width:auto;accent-color:var(--orange)}
+.server-summary{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:10px;
+  margin:18px 0;
+  color:var(--muted);
+  font-size:13px;
+}
+.server-summary strong{color:white}
+#serverStatus{color:var(--muted)}
+.server-list{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:13px;
+}
+.server-card{
+  min-width:0;
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:17px;
+  transition:border-color .2s,transform .2s;
+}
+.server-card:hover{border-color:#87502f;transform:translateY(-2px)}
+.server-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+}
+.server-name{
+  font-size:16px;
+  line-height:1.4;
+  overflow-wrap:anywhere;
+}
+.server-country{
+  flex-shrink:0;
+  font-size:11px;
+  color:#c5c8ce;
+  background:#292d34;
+  padding:5px 8px;
+  border-radius:5px;
+}
+.server-tags{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+.tag{
+  background:#292d34;
+  color:#c8cbd1;
+  border-radius:5px;
+  padding:5px 8px;
+  font-size:10px;
+  font-weight:800;
+}
+.tag.orange-tag{background:#4a2b1d;color:#ffad7c}
+.server-info{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:9px;
+  margin-top:13px;
+}
+.info-item{
+  min-width:0;
+  background:#14161a;
+  border-radius:6px;
+  padding:9px;
+}
+.info-item span{display:block;color:var(--muted);font-size:10px;margin-bottom:5px}
+.info-item strong{display:block;font-size:12px;overflow-wrap:anywhere}
+.server-bottom{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  border-top:1px solid var(--border);
+  margin-top:14px;
+  padding-top:13px;
+}
+.online{color:var(--green);font-size:14px;font-weight:900}
+.offline{color:var(--red)}
+.server-actions{display:flex;gap:7px;flex-wrap:wrap}
+.server-actions a,.server-actions button{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:9px 11px;
+  border-radius:6px;
+  font-size:11px;
+  font-weight:800;
+}
+.connect{background:var(--orange);color:white}
+.details{background:#30343c;color:#eee}
+.favorite-btn{
+  background:#30343c;
+  color:#ddd;
+  padding:8px 10px;
+}
+.favorite-btn.active{color:#ffb45f;background:#49321f}
+.pagination{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:12px;
+  margin-top:22px;
+}
+.pagination span{color:var(--muted);font-size:13px}
+.empty,.message{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:20px;
+  color:var(--muted);
+  text-align:center;
+  line-height:1.6;
+}
+.loading{padding:25px;text-align:center;color:var(--muted)}
+.error{color:#ff9999}
+
+.result{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:20px;
+}
+.profile-head{display:flex;align-items:center;gap:15px}
+.avatar{
+  width:78px;height:78px;
+  object-fit:cover;
+  border-radius:9px;
+  border:2px solid var(--orange);
+}
+.profile-name{font-size:23px;color:var(--orange);overflow-wrap:anywhere}
+.muted{color:var(--muted);font-size:13px;line-height:1.7}
+.profile-link{display:inline-block;margin-top:13px;font-weight:800}
+.stats{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+  margin-top:18px;
+}
+.stat{
+  background:var(--panel2);
+  border:1px solid var(--border);
+  border-radius:7px;
+  padding:13px;
+}
+.stat span{display:block;color:var(--muted);font-size:10px}
+.stat strong{display:block;color:var(--orange);font-size:21px;margin-top:7px;overflow-wrap:anywhere}
+.panel{
+  margin-top:14px;
+  background:var(--panel2);
+  border:1px solid var(--border);
+  border-radius:7px;
+  padding:14px;
+}
+.panel h3{font-size:14px;color:var(--orange);margin-bottom:10px}
+.status{padding:11px;border-radius:6px;margin-top:10px;font-size:13px}
+.status.good{background:#173324;color:#79dfa0}
+.status.neutral{background:#352b1d;color:#ffc078}
+.status.bad{background:#3b2020;color:#ff9999}
+.stat-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stat-row{background:#191b20;padding:9px;border-radius:5px;min-width:0}
+.stat-row span{display:block;color:var(--muted);font-size:10px;overflow-wrap:anywhere}
+.stat-row strong{display:block;margin-top:5px;font-size:13px;overflow-wrap:anywhere}
+.achievement{padding:9px 0;border-bottom:1px solid var(--border);font-size:12px}
+.achievement:last-child{border:0}
+.achievement small{display:block;color:var(--muted);margin-top:4px}
+
+.history-item{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:7px;padding:12px;margin-bottom:9px;
+}
+.history-item strong{overflow-wrap:anywhere;font-size:13px}
+.history-item button{padding:8px 12px;font-size:11px;flex-shrink:0}
+
+footer{
+  margin-top:45px;
+  padding:30px 20px;
+  background:#17191d;
+  border-top:1px solid var(--border);
+  text-align:center;
+  color:#777;
+  font-size:12px;
+  line-height:1.8;
+}
+
+@media(max-width:850px){
+  .filters{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .server-list{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  header{padding:14px 16px;flex-wrap:wrap}
+  nav{width:100%;justify-content:space-between;gap:10px}
+  nav a{font-size:12px}
+  .hero{min-height:290px}
+  .player-search{flex-direction:column}
+  main{padding:28px 13px}
+  .features{grid-template-columns:1fr}
+  .filters{grid-template-columns:1fr 1fr}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stat-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .server-card{padding:13px}
+  .server-info{gap:7px}
+}
+@media(max-width:380px){
+  .filters{grid-template-columns:1fr}
+  .profile-head{align-items:flex-start}
+  .avatar{width:62px;height:62px}
 }
 </style>
 </head>
@@ -532,725 +373,734 @@ footer a {
 <body>
 
 <header>
-    <div class="logo">RUST <span>RADAR</span></div>
-
-    <nav>
-        <a href="#players">Игроки</a>
-        <a href="#servers">Серверы</a>
-        <a href="#history">История</a>
-    </nav>
+  <div class="logo">RUST <span>RADAR</span></div>
+  <nav>
+    <a href="#players">Игроки</a>
+    <a href="#servers">Серверы</a>
+    <a href="#history">История</a>
+  </nav>
 </header>
 
 <section class="hero">
-    <h1>RUST <span>RADAR</span></h1>
-    <p>Steam-профили, статистика Rust и реальные игровые серверы</p>
+  <h1>RUST <span class="orange">RADAR</span></h1>
+  <p>Steam-профили, статистика Rust и реальные игровые серверы</p>
 
-    <div class="search">
-        <input
-            id="playerSearch"
-            type="text"
-            placeholder="SteamID или ссылка профиля..."
-            onkeydown="if(event.key==='Enter')searchPlayer()"
-        >
-        <button onclick="searchPlayer()">ПОИСК</button>
-    </div>
+  <div class="player-search">
+    <input id="playerSearch" type="text"
+      placeholder="SteamID64 или ссылка на профиль..."
+      autocomplete="off">
+    <button id="playerSearchBtn" onclick="searchPlayer()">ПОИСК</button>
+  </div>
 
-    <div id="searchResult"></div>
+  <div id="searchResult"></div>
 </section>
 
 <main>
 
-    <section id="players">
-        <h2 class="section-title">ВОЗМОЖНОСТИ <span>ТРЕКЕРА</span></h2>
+<section class="section" id="players">
+  <h2 class="section-title">ВОЗМОЖНОСТИ <span>ТРЕКЕРА</span></h2>
+  <div class="features">
+    <div class="feature">
+      <h3>Steam-профили</h3>
+      <p>Поиск по SteamID64, ссылке или адресу профиля.</p>
+    </div>
+    <div class="feature">
+      <h3>Статистика Rust</h3>
+      <p>Часы, игровые показатели и достижения, если Steam предоставляет эти данные.</p>
+    </div>
+    <div class="feature">
+      <h3>Реальные серверы</h3>
+      <p>Онлайн игроков, карты, страны, вайпы и адреса подключения.</p>
+    </div>
+  </div>
+</section>
 
-        <div class="features">
-            <div class="feature">
-                <h2>Steam-профили</h2>
-                <p>Поиск по SteamID64, ссылке или адресу профиля.</p>
-            </div>
+<section class="section" id="servers">
+  <h2 class="section-title">ИГРОВЫЕ <span>СЕРВЕРЫ</span></h2>
 
-            <div class="feature">
-                <h2>Статистика Rust</h2>
-                <p>Часы, убийства, смерти и K/D, если Steam предоставляет эти данные.</p>
-            </div>
+  <div class="toolbar">
+    <div class="filters">
 
-            <div class="feature">
-                <h2>Реальные серверы</h2>
-                <p>Поиск серверов, онлайн игроков, карты, стран и адреса подключения.</p>
-            </div>
-        </div>
-    </section>
+      <div class="field">
+        <label for="serverSearch">Название сервера</label>
+        <input id="serverSearch" placeholder="Например, Rustoria">
+      </div>
 
-    <section class="content-section" id="servers">
-        <h2 class="section-title">ИГРОВЫЕ <span>СЕРВЕРЫ</span></h2>
+      <div class="field">
+        <label for="kindFilter">Тип сервера</label>
+        <select id="kindFilter">
+          <option value="">Все типы</option>
+          <option value="vanilla">Vanilla</option>
+          <option value="modded">Modded</option>
+          <option value="official">Official</option>
+          <option value="pure">Pure</option>
+        </select>
+      </div>
 
-        <div class="server-filters">
-            <input
-                id="serverSearch"
-                placeholder="Название сервера..."
-                onkeydown="if(event.key==='Enter')loadServers(true)"
-            >
+      <div class="field">
+        <label for="groupFilter">Размер команды</label>
+        <select id="groupFilter">
+          <option value="">Все команды</option>
+          <option value="solo">Solo</option>
+          <option value="duo">Duo</option>
+          <option value="trio">Trio</option>
+        </select>
+      </div>
 
-            <select id="serverKind">
-                <option value="">Все типы</option>
-                <option value="vanilla">Vanilla</option>
-                <option value="modded">Modded</option>
-                <option value="official">Official</option>
-                <option value="pure">Pure</option>
-            </select>
+      <div class="field">
+        <label for="gatherFilter">Множитель</label>
+        <select id="gatherFilter">
+          <option value="">Любой множитель</option>
+          <option value="2x">2x</option>
+          <option value="3x">3x</option>
+          <option value="5x">5x</option>
+          <option value="10x">10x</option>
+        </select>
+      </div>
 
-            <select id="serverGroup">
-                <option value="">Все команды</option>
-                <option value="solo">Solo</option>
-                <option value="duo">Duo</option>
-                <option value="trio">Trio</option>
-            </select>
+      <div class="field">
+        <label for="countryFilter">Страна</label>
+        <select id="countryFilter">
+          <option value="">Все страны</option>
+          <option value="RU">Россия</option>
+          <option value="GB">Великобритания</option>
+          <option value="DE">Германия</option>
+          <option value="US">США</option>
+          <option value="FR">Франция</option>
+          <option value="NL">Нидерланды</option>
+          <option value="PL">Польша</option>
+          <option value="FI">Финляндия</option>
+          <option value="SE">Швеция</option>
+          <option value="CA">Канада</option>
+        </select>
+      </div>
 
-            <select id="serverSort">
-                <option value="players">По онлайну</option>
-                <option value="votes">По голосам</option>
-                <option value="rating">По рейтингу</option>
-                <option value="wiped">По вайпу</option>
-                <option value="name">По названию</option>
-            </select>
-        </div>
+      <div class="field">
+        <label for="sortFilter">Сортировка</label>
+        <select id="sortFilter">
+          <option value="players">По онлайну</option>
+          <option value="votes">По голосам</option>
+          <option value="rating">По рейтингу</option>
+          <option value="wiped">По вайпу</option>
+          <option value="name">По названию</option>
+        </select>
+      </div>
 
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px">
-            <input
-                id="serverCountry"
-                placeholder="Страна: DE, US, RU..."
-                maxlength="2"
-                style="width:180px"
-            >
+      <div class="field">
+        <label for="minPlayers">Минимум игроков</label>
+        <input id="minPlayers" type="number" min="0" max="10000" placeholder="Например, 50">
+      </div>
 
-            <select id="serverGather" style="width:150px">
-                <option value="">Любой X</option>
-                <option value="2x">2x</option>
-                <option value="3x">3x</option>
-                <option value="5x">5x</option>
-                <option value="10x">10x</option>
-            </select>
+      <div class="field">
+        <label for="perPage">Серверов на странице</label>
+        <select id="perPage">
+          <option value="20">20 серверов</option>
+          <option value="50">50 серверов</option>
+          <option value="100">100 серверов</option>
+        </select>
+      </div>
+    </div>
 
-            <button onclick="loadServers(true)">НАЙТИ СЕРВЕРЫ</button>
-            <button onclick="loadServers(true)">ОБНОВИТЬ</button>
-        </div>
+    <div class="filter-actions">
+      <button onclick="applyFilters()">НАЙТИ СЕРВЕРЫ</button>
+      <button class="secondary" onclick="resetFilters()">СБРОСИТЬ</button>
+      <button class="secondary" onclick="loadServers()">↻ ОБНОВИТЬ</button>
 
-        <div id="serverList">
-            <div class="loading">Загружаем серверы...</div>
-        </div>
+      <label class="favorite-filter">
+        <input type="checkbox" id="favoritesOnly" onchange="renderServers()">
+        Избранное на странице
+      </label>
+    </div>
+  </div>
 
-        <div class="server-pagination">
-            <button id="prevServers" onclick="changeServerPage(-1)" disabled>
-                НАЗАД
-            </button>
+  <div class="server-summary">
+    <div id="serverCount">Загрузка серверов...</div>
+    <div id="serverStatus">Подключение к API...</div>
+  </div>
 
-            <span id="serverPageInfo" class="muted">Страница 1</span>
+  <div id="serverList" class="server-list">
+    <div class="loading">Загружаем реальные серверы Rust...</div>
+  </div>
 
-            <button id="nextServers" onclick="changeServerPage(1)" disabled>
-                ДАЛЕЕ
-            </button>
-        </div>
+  <div class="pagination">
+    <button class="secondary" id="prevPage" onclick="changePage(-1)">НАЗАД</button>
+    <span id="pageInfo">Страница 1</span>
+    <button class="secondary" id="nextPage" onclick="changePage(1)">ДАЛЕЕ</button>
+  </div>
+</section>
 
-        <div id="serverTotal" class="server-meta"></div>
-    </section>
-
-    <section class="content-section" id="history">
-        <h2 class="section-title">ИСТОРИЯ <span>ПОИСКА</span></h2>
-
-        <div id="historyList"></div>
-
-        <button onclick="clearHistory()" style="margin-top:12px">
-            ОЧИСТИТЬ ИСТОРИЮ
-        </button>
-    </section>
+<section class="section" id="history">
+  <h2 class="section-title">ИСТОРИЯ <span>ПОИСКА</span></h2>
+  <div id="historyList"></div>
+  <button class="secondary" onclick="clearHistory()" style="margin-top:12px">
+    ОЧИСТИТЬ ИСТОРИЮ
+  </button>
+</section>
 
 </main>
 
 <footer>
-    RUST RADAR © 2026
-    <br><br>
-    Неофициальный фанатский проект. Не связан с Valve или Facepunch.
-    <br><br>
-    Данные серверов:
-    <a href="https://rust.wiki" target="_blank" rel="noopener noreferrer">
-        rust.wiki
-    </a>
+  RUST RADAR © 2026<br>
+  Неофициальный фанатский проект. Не связан с Valve или Facepunch.<br>
+  Данные серверов: <a href="https://rust.wiki/" target="_blank" rel="noopener">rust.wiki</a>
 </footer>
 
 <script>
-function escapeHTML(value) {
-    return String(value ?? "").replace(/[&<>"']/g, char => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#39;"
-    })[char]);
+const $ = id => document.getElementById(id);
+
+let currentPage = 1;
+let totalPages = 1;
+let totalServers = 0;
+let currentServers = [];
+let loadingServers = false;
+let lastServerRequest = 0;
+
+function escapeHTML(value){
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  })[char]);
 }
 
-function safeUrl(value) {
-    try {
-        const url = new URL(value);
-
-        if (["https:", "http:", "steam:"].includes(url.protocol)) {
-            return escapeHTML(url.href);
-        }
-
-        return "";
-    } catch {
-        return "";
-    }
+function safeHttpUrl(value){
+  try{
+    const url = new URL(value);
+    return ["https:","http:"].includes(url.protocol) ? url.href : "";
+  }catch{
+    return "";
+  }
 }
 
-function formatNumber(value) {
-    return Number(value || 0).toLocaleString("ru-RU");
+function formatNumber(value){
+  const number = Number(value);
+  return Number.isFinite(number) ? number.toLocaleString("ru-RU") : "—";
 }
 
-function formatHours(minutes) {
-    if (minutes === null || minutes === undefined) {
-        return "Нет данных";
-    }
-
-    return (Number(minutes) / 60)
-        .toFixed(1)
-        .replace(".", ",") + " ч";
+function formatHours(minutes){
+  if(minutes === null || minutes === undefined) return "—";
+  return (Number(minutes)/60).toFixed(1).replace(".",",") + " ч";
 }
 
-function formatDate(timestamp) {
-    if (!timestamp) return "Нет данных";
-
-    return new Date(Number(timestamp) * 1000)
-        .toLocaleDateString("ru-RU");
+function formatDate(value){
+  if(!value) return "Нет данных";
+  const date = new Date(value);
+  if(Number.isNaN(date.getTime())) return "Нет данных";
+  return date.toLocaleDateString("ru-RU");
 }
 
-/* =========================
-   STEAM PLAYER SEARCH
-========================= */
-
-async function searchPlayer() {
-    const input = document.getElementById("playerSearch").value.trim();
-    const result = document.getElementById("searchResult");
-
-    if (!input) {
-        result.innerHTML = '<div class="result">Введи SteamID или ссылку профиля.</div>';
-        return;
-    }
-
-    result.innerHTML = '<div class="result loading">Поиск игрока в Steam...</div>';
-
-    try {
-        let steamInput = input;
-
-        const match = input.match(
-            /steamcommunity\.com\/(?:profiles\/(\d+)|id\/([^/?]+))/i
-        );
-
-        if (match) {
-            steamInput = match[1] || match[2];
-        }
-
-        const response = await fetch(
-            "/api/player?steamid=" + encodeURIComponent(steamInput)
-        );
-
-        const player = await response.json();
-
-        if (!response.ok) {
-            throw new Error(player.error || "Игрок не найден");
-        }
-
-        const visibility = player.visibility === 3
-            ? "Публичный профиль"
-            : "Закрытый или ограниченный профиль";
-
-        const avatar = safeUrl(player.avatar);
-        const profile = safeUrl(player.profile);
-
-        result.innerHTML = `
-            <div class="result">
-                <div class="profile-head">
-                    <img
-                        class="avatar"
-                        src="${avatar}"
-                        alt="Аватар"
-                    >
-
-                    <div>
-                        <h2 class="profile-name">
-                            ${escapeHTML(player.name)}
-                        </h2>
-
-                        <div class="muted">${visibility}</div>
-                        <div class="muted">
-                            SteamID: ${escapeHTML(player.steamid)}
-                        </div>
-                    </div>
-                </div>
-
-                ${profile ? `
-                    <a class="profile-link"
-                       href="${profile}"
-                       target="_blank"
-                       rel="noopener noreferrer">
-                       ОТКРЫТЬ ПРОФИЛЬ STEAM ↗
-                    </a>
-                ` : ""}
-
-                <div class="registration">
-                    Дата регистрации Steam:
-                    <strong>${formatDate(player.created)}</strong>
-                </div>
-
-                <div id="rustLoading" class="loading">
-                    Получаем статистику Rust...
-                </div>
-
-                <div id="rustStats"></div>
-            </div>
-        `;
-
-        saveHistory(input);
-
-        try {
-            const statsResponse = await fetch(
-                "/api/rust-stats?steamid=" + encodeURIComponent(player.steamid)
-            );
-
-            const stats = await statsResponse.json();
-
-            if (!statsResponse.ok) {
-                throw new Error(stats.error || "Ошибка статистики");
-            }
-
-            document.getElementById("rustLoading")?.remove();
-            renderRustStats(stats);
-
-        } catch (error) {
-            const loading = document.getElementById("rustLoading");
-
-            if (loading) {
-                loading.innerHTML = escapeHTML(error.message);
-            }
-        }
-
-    } catch (error) {
-        result.innerHTML = `
-            <div class="result">
-                <h3 style="color:#e97832;margin-bottom:10px">
-                    Ошибка поиска
-                </h3>
-
-                <p class="muted">${escapeHTML(error.message)}</p>
-            </div>
-        `;
-    }
+function getHistory(){
+  try{
+    const value = JSON.parse(localStorage.getItem("rustHistory") || "[]");
+    return Array.isArray(value) ? value : [];
+  }catch{
+    return [];
+  }
 }
 
-/* =========================
-   RUST PLAYER STATS
-========================= */
-
-function renderRustStats(data) {
-    const container = document.getElementById("rustStats");
-
-    if (!container) return;
-
-    if (!data.available || !data.ownsRust) {
-        container.innerHTML = `
-            <div class="status neutral">
-                ${escapeHTML(data.message || "Rust не найден в доступной библиотеке Steam.")}
-            </div>
-        `;
-        return;
-    }
-
-    let html = `
-        <div class="stats">
-            <div class="stat">
-                <span>ВСЕГО В RUST</span>
-                <strong>${formatNumber(data.hours)} ч</strong>
-            </div>
-
-            <div class="stat">
-                <span>ЗА 2 НЕДЕЛИ</span>
-                <strong>${formatHours(data.recentMinutes)}</strong>
-            </div>
-
-            <div class="stat">
-                <span>УБИЙСТВА</span>
-                <strong>${data.kills == null ? "—" : formatNumber(data.kills)}</strong>
-            </div>
-
-            <div class="stat">
-                <span>СМЕРТИ</span>
-                <strong>${data.deaths == null ? "—" : formatNumber(data.deaths)}</strong>
-            </div>
-
-            <div class="stat">
-                <span>K/D</span>
-                <strong>${data.kd == null ? "—" : escapeHTML(data.kd)}</strong>
-            </div>
-
-            <div class="stat">
-                <span>ДОСТИЖЕНИЯ</span>
-                <strong>
-                    ${data.achievements
-                        ? formatNumber(data.achievements.unlocked) + "/" +
-                          formatNumber(data.achievements.total)
-                        : "—"}
-                </strong>
-            </div>
-        </div>
-    `;
-
-    if (!data.statsAvailable) {
-        html += `
-            <div class="status neutral">
-                Игровые показатели недоступны. Проверь настройки приватности Steam.
-            </div>
-        `;
-    }
-
-    if (data.allStats?.length) {
-        const visibleStats = data.allStats.slice(0, 30);
-
-        html += `
-            <div class="panel">
-                <h3>ДРУГИЕ ПОКАЗАТЕЛИ RUST</h3>
-
-                <div class="stat-list">
-                    ${visibleStats.map(item => `
-                        <div class="stat-row">
-                            <span>${escapeHTML(item.name)}</span>
-                            <strong>${formatNumber(item.value)}</strong>
-                        </div>
-                    `).join("")}
-                </div>
-
-                ${data.allStats.length > 30 ? `
-                    <p class="muted" style="margin-top:12px">
-                        Показаны первые 30 из ${data.allStats.length} показателей.
-                    </p>
-                ` : ""}
-            </div>
-        `;
-    }
-
-    if (data.achievements) {
-        const achievements = data.achievements.items || [];
-        const unlocked = achievements
-            .filter(item => item.achieved)
-            .slice(0, 10);
-
-        html += `
-            <div class="panel">
-                <h3>ДОСТИЖЕНИЯ</h3>
-
-                <p class="muted">
-                    Открыто ${formatNumber(data.achievements.unlocked)}
-                    из ${formatNumber(data.achievements.total)}
-                </p>
-
-                ${unlocked.length ? unlocked.map(item => `
-                    <div class="achievement">
-                        <strong>✓ ${escapeHTML(item.name)}</strong>
-                        <small>${escapeHTML(item.description)}</small>
-                    </div>
-                `).join("") : `
-                    <p class="muted">Нет открытых достижений для отображения.</p>
-                `}
-            </div>
-        `;
-    }
-
-    if (data.bans) {
-        const banned = Boolean(data.bans.vacBanned) ||
-            Number(data.bans.gameBanned) > 0;
-
-        html += `
-            <div class="panel">
-                <h3>ИНФОРМАЦИЯ О БЛОКИРОВКАХ STEAM</h3>
-
-                <div class="status ${banned ? "bad" : "good"}">
-                    ${banned
-                        ? "Steam сообщает о наличии блокировок."
-                        : "Steam не сообщает о VAC или игровых блокировках."}
-                </div>
-
-                <p class="muted" style="margin-top:12px">
-                    VAC-блокировки: ${formatNumber(data.bans.vacBans)}<br>
-                    Игровые блокировки: ${formatNumber(data.bans.gameBanned)}<br>
-                    Дней с последней блокировки:
-                    ${formatNumber(data.bans.daysSinceLastBan)}<br>
-                    Блокировка обмена:
-                    ${escapeHTML(data.bans.economyBan || "не указана")}
-                </p>
-            </div>
-        `;
-    }
-
-    container.innerHTML = html;
+function saveHistory(query){
+  let history = getHistory();
+  history = history.filter(item => item !== query);
+  history.unshift(query);
+  localStorage.setItem("rustHistory", JSON.stringify(history.slice(0,10)));
+  showHistory();
 }
 
-/* =========================
-   REAL RUST SERVERS
-========================= */
+function showHistory(){
+  const container = $("historyList");
+  const history = getHistory();
 
-let serverPage = 1;
-let serverPages = 1;
-let serverTotal = 0;
-let serverLoading = false;
+  if(!history.length){
+    container.innerHTML = '<div class="empty">История пока пуста.</div>';
+    return;
+  }
 
-async function loadServers(resetPage = false) {
-    if (serverLoading) return;
-
-    if (resetPage) serverPage = 1;
-
-    serverLoading = true;
-
-    const container = document.getElementById("serverList");
-
-    container.innerHTML = `
-        <div class="loading">Загружаем реальные серверы Rust...</div>
-    `;
-
-    const params = new URLSearchParams();
-
-    params.set("page", String(serverPage));
-    params.set("per_page", "20");
-
-    const search = document.getElementById("serverSearch").value.trim();
-    const country = document.getElementById("serverCountry").value.trim();
-    const kind = document.getElementById("serverKind").value;
-    const group = document.getElementById("serverGroup").value;
-    const gather = document.getElementById("serverGather").value;
-    const sort = document.getElementById("serverSort").value;
-
-    if (search) params.set("search", search);
-    if (/^[a-zA-Z]{2}$/.test(country)) {
-        params.set("country", country.toUpperCase());
-    }
-    if (kind) params.set("kind", kind);
-    if (group) params.set("group", group);
-    if (gather) params.set("gather", gather);
-    if (sort) params.set("sort", sort);
-
-    try {
-        const response = await fetch("/api/servers?" + params.toString());
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.error || "Не удалось загрузить серверы");
-        }
-
-        const servers = Array.isArray(data.servers) ? data.servers : [];
-
-        serverPages = Math.max(1, Number(data.pages) || 1);
-        serverTotal = Number(data.total) || 0;
-
-        renderServers(servers);
-
-        document.getElementById("serverPageInfo").textContent =
-            "Страница " + serverPage + " из " + serverPages;
-
-        document.getElementById("serverTotal").textContent =
-            "Всего найдено серверов: " + formatNumber(serverTotal);
-
-        document.getElementById("prevServers").disabled =
-            serverPage <= 1;
-
-        document.getElementById("nextServers").disabled =
-            serverPage >= serverPages;
-
-    } catch (error) {
-        container.innerHTML = `
-            <div class="status bad">
-                ${escapeHTML(error.message)}
-            </div>
-
-            <button onclick="loadServers()" style="margin-top:12px">
-                ПОВТОРИТЬ
-            </button>
-        `;
-    } finally {
-        serverLoading = false;
-    }
+  container.innerHTML = history.map((item,index) => `
+    <div class="history-item">
+      <strong>${escapeHTML(item)}</strong>
+      <button onclick="repeatSearch(${index})">ОТКРЫТЬ</button>
+    </div>
+  `).join("");
 }
 
-function renderServers(servers) {
-    const container = document.getElementById("serverList");
+function repeatSearch(index){
+  const query = getHistory()[index];
+  if(!query) return;
 
-    if (!servers.length) {
-        container.innerHTML = `
-            <div class="empty">
-                Серверы по заданным параметрам не найдены.
-            </div>
-        `;
-        return;
-    }
-
-    container.innerHTML = servers.map(server => {
-        const name = escapeHTML(server.name || "Без названия");
-        const map = escapeHTML(server.map || "Неизвестная карта");
-        const country = escapeHTML(
-            server.country_name || server.country || "Неизвестно"
-        );
-
-        const players = Number(server.current_players) || 0;
-        const maxPlayers = Number(server.max_players) || 0;
-        const queued = Number(server.queued_players) || 0;
-
-        const online = server.is_online !== false;
-        const connect = safeUrl(server.connect);
-        const page = safeUrl(server.url);
-
-        const kind = escapeHTML(server.kind || "Не указан");
-        const group = escapeHTML(server.group || "Не указан");
-
-        const wipe = server.last_wipe_at
-            ? new Date(server.last_wipe_at).toLocaleDateString("ru-RU")
-            : "Нет данных";
-
-        return `
-            <div class="server">
-                <div style="flex:1;min-width:0">
-                    <h3>${name}</h3>
-
-                    <p>Карта: ${map}</p>
-                    <p>Страна: ${country}</p>
-                    <p>Тип: ${kind}</p>
-                    <p>Команда: ${group}</p>
-                    <p>Последний вайп: ${wipe}</p>
-                    <p>В очереди: ${formatNumber(queued)}</p>
-
-                    <p class="${online ? "server-online" : "server-offline"}">
-                        ${online ? "● ОНЛАЙН" : "● ОФЛАЙН"}
-                    </p>
-
-                    <div class="server-actions">
-                        ${connect ? `
-                            <a href="${connect}">
-                                ПОДКЛЮЧИТЬСЯ
-                            </a>
-                        ` : ""}
-
-                        ${page ? `
-                            <a href="${page}"
-                               target="_blank"
-                               rel="noopener noreferrer">
-                                ПОДРОБНЕЕ
-                            </a>
-                        ` : ""}
-                    </div>
-                </div>
-
-                <div class="server-players">
-                    ${formatNumber(players)}/${formatNumber(maxPlayers)}
-                </div>
-            </div>
-        `;
-    }).join("");
+  $("playerSearch").value = query;
+  searchPlayer();
+  window.scrollTo({top:0,behavior:"smooth"});
 }
 
-function changeServerPage(direction) {
-    const next = serverPage + direction;
-
-    if (next < 1 || next > serverPages) return;
-
-    serverPage = next;
-    loadServers();
-
-    document.getElementById("servers").scrollIntoView({
-        behavior: "smooth"
-    });
+function clearHistory(){
+  localStorage.removeItem("rustHistory");
+  showHistory();
 }
 
-/* =========================
-   SEARCH HISTORY
-========================= */
+async function searchPlayer(){
+  const input = $("playerSearch").value.trim();
+  const result = $("searchResult");
+  const button = $("playerSearchBtn");
 
-function saveHistory(query) {
-    let history = [];
+  if(!input){
+    result.innerHTML = '<div class="result">Введи SteamID или ссылку профиля.</div>';
+    return;
+  }
 
-    try {
-        history = JSON.parse(
-            localStorage.getItem("rustHistory") || "[]"
-        );
-    } catch {
-        history = [];
-    }
+  button.disabled = true;
+  result.innerHTML = '<div class="result loading">Ищем игрока в Steam...</div>';
 
-    history = history.filter(item => item !== query);
-    history.unshift(query);
-    history = history.slice(0, 10);
+  try{
+    let steamInput = input;
 
-    localStorage.setItem("rustHistory", JSON.stringify(history));
-
-    showHistory();
-}
-
-function showHistory() {
-    const container = document.getElementById("historyList");
-
-    let history = [];
-
-    try {
-        history = JSON.parse(
-            localStorage.getItem("rustHistory") || "[]"
-        );
-    } catch {
-        history = [];
-    }
-
-    if (!history.length) {
-        container.innerHTML = `
-            <div class="empty">История пока пуста.</div>
-        `;
-        return;
-    }
-
-    container.innerHTML = history.map((item, index) => `
-        <div class="history-item">
-            <strong>${escapeHTML(item)}</strong>
-
-            <button onclick="repeatSearch(${index})">
-                ОТКРЫТЬ
-            </button>
-        </div>
-    `).join("");
-}
-
-function repeatSearch(index) {
-    const history = JSON.parse(
-        localStorage.getItem("rustHistory") || "[]"
+    const match = input.match(
+      /steamcommunity\.com\/(?:profiles\/(\d+)|id\/([^/?#]+))/i
     );
 
-    const query = history[index];
+    if(match) steamInput = match[1] || match[2];
 
-    if (!query) return;
+    const response = await fetch(
+      "/api/player?steamid=" + encodeURIComponent(steamInput)
+    );
 
-    document.getElementById("playerSearch").value = query;
+    const player = await response.json();
 
-    searchPlayer();
+    if(!response.ok) throw new Error(player.error || "Игрок не найден");
 
-    window.scrollTo({
-        top: 0,
-        behavior: "smooth"
+    const avatar = safeHttpUrl(player.avatar);
+    const profile = safeHttpUrl(player.profile);
+    const visibility = player.visibility === 3
+      ? "Публичный профиль"
+      : "Закрытый или ограниченный профиль";
+
+    result.innerHTML = `
+      <div class="result">
+        <div class="profile-head">
+          ${avatar ? `<img class="avatar" src="${escapeHTML(avatar)}" alt="Аватар">` : ""}
+          <div>
+            <h2 class="profile-name">${escapeHTML(player.name)}</h2>
+            <div class="muted">${visibility}</div>
+            <div class="muted">SteamID: ${escapeHTML(player.steamid)}</div>
+          </div>
+        </div>
+
+        ${profile ? `<a class="profile-link" href="${escapeHTML(profile)}" target="_blank" rel="noopener noreferrer">ОТКРЫТЬ ПРОФИЛЬ STEAM ↗</a>` : ""}
+
+        <div class="muted" style="margin-top:10px">
+          Дата регистрации Steam: ${formatDate(Number(player.created)*1000)}
+        </div>
+
+        <div id="rustLoading" class="loading">Получаем статистику Rust...</div>
+        <div id="rustStats"></div>
+      </div>
+    `;
+
+    saveHistory(input);
+
+    const statsResponse = await fetch(
+      "/api/rust-stats?steamid=" + encodeURIComponent(player.steamid)
+    );
+    const stats = await statsResponse.json();
+
+    if(!statsResponse.ok) throw new Error(stats.error || "Ошибка получения статистики");
+
+    $("rustLoading")?.remove();
+    renderRustStats(stats);
+
+  }catch(error){
+    result.innerHTML = `
+      <div class="result">
+        <h3 class="orange" style="margin-bottom:9px">Ошибка поиска</h3>
+        <p class="muted">${escapeHTML(error.message)}</p>
+      </div>
+    `;
+  }finally{
+    button.disabled = false;
+  }
+}
+
+function renderRustStats(data){
+  const container = $("rustStats");
+  if(!container) return;
+
+  if(!data.available || !data.ownsRust){
+    container.innerHTML = `
+      <div class="status neutral">
+        ${escapeHTML(data.message || "Rust не найден в доступной библиотеке Steam. Возможно, библиотека скрыта настройками приватности.")}
+      </div>
+    `;
+    return;
+  }
+
+  let html = `
+    <div class="stats">
+      <div class="stat">
+        <span>ВСЕГО В RUST</span>
+        <strong>${formatNumber(data.hours)} ч</strong>
+      </div>
+      <div class="stat">
+        <span>ЗА 2 НЕДЕЛИ</span>
+        <strong>${formatHours(data.recentMinutes)}</strong>
+      </div>
+      <div class="stat">
+        <span>УБИЙСТВА</span>
+        <strong>${data.kills == null ? "—" : formatNumber(data.kills)}</strong>
+      </div>
+      <div class="stat">
+        <span>СМЕРТИ</span>
+        <strong>${data.deaths == null ? "—" : formatNumber(data.deaths)}</strong>
+      </div>
+      <div class="stat">
+        <span>K/D</span>
+        <strong>${data.kd == null ? "—" : escapeHTML(data.kd)}</strong>
+      </div>
+      <div class="stat">
+        <span>ДОСТИЖЕНИЯ</span>
+        <strong>${data.achievements ? formatNumber(data.achievements.unlocked) + "/" + formatNumber(data.achievements.total) : "—"}</strong>
+      </div>
+    </div>
+  `;
+
+  if(!data.statsAvailable){
+    html += `
+      <div class="status neutral">
+        Игровые показатели недоступны. Проверь настройки приватности Steam.
+      </div>
+    `;
+  }
+
+  if(Array.isArray(data.allStats) && data.allStats.length){
+    html += `
+      <div class="panel">
+        <h3>ДРУГИЕ ПОКАЗАТЕЛИ RUST</h3>
+        <div class="stat-list">
+          ${data.allStats.slice(0,30).map(item => `
+            <div class="stat-row">
+              <span>${escapeHTML(item.name)}</span>
+              <strong>${formatNumber(item.value)}</strong>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    `;
+  }
+
+  if(data.achievements){
+    const achievements = data.achievements.items || [];
+    const unlocked = achievements.filter(item => item.achieved).slice(0,10);
+
+    html += `
+      <div class="panel">
+        <h3>ДОСТИЖЕНИЯ</h3>
+        <p class="muted">Открыто ${formatNumber(data.achievements.unlocked)} из ${formatNumber(data.achievements.total)}</p>
+        ${unlocked.length ? unlocked.map(item => `
+          <div class="achievement">
+            <strong>✓ ${escapeHTML(item.name)}</strong>
+            <small>${escapeHTML(item.description)}</small>
+          </div>
+        `).join("") : '<p class="muted">Нет открытых достижений для отображения.</p>'}
+      </div>
+    `;
+  }
+
+  if(data.bans){
+    const banned = Boolean(data.bans.vacBanned) || Number(data.bans.gameBanned) > 0;
+
+    html += `
+      <div class="panel">
+        <h3>БЛОКИРОВКИ STEAM</h3>
+        <div class="status ${banned ? "bad" : "good"}">
+          ${banned ? "Steam сообщает о наличии блокировок." : "Steam не сообщает о VAC или игровых блокировках."}
+        </div>
+        <p class="muted" style="margin-top:10px">
+          VAC-блокировки: ${formatNumber(data.bans.vacBans)}<br>
+          Игровые блокировки: ${formatNumber(data.bans.gameBanned)}<br>
+          Дней с последней блокировки: ${formatNumber(data.bans.daysSinceLastBan)}
+        </p>
+      </div>
+    `;
+  }
+
+  container.innerHTML = html;
+}
+
+/* ---------------- СЕРВЕРЫ ---------------- */
+
+function getFavorites(){
+  try{
+    const value = JSON.parse(localStorage.getItem("rustFavorites") || "[]");
+    return Array.isArray(value) ? value.map(String) : [];
+  }catch{
+    return [];
+  }
+}
+
+function isFavorite(id){
+  return getFavorites().includes(String(id));
+}
+
+function toggleFavorite(id){
+  let favorites = getFavorites();
+  id = String(id);
+
+  if(favorites.includes(id)){
+    favorites = favorites.filter(item => item !== id);
+  }else{
+    favorites.push(id);
+  }
+
+  localStorage.setItem("rustFavorites", JSON.stringify(favorites));
+  renderServers();
+}
+
+function getFilters(){
+  return {
+    search: $("serverSearch").value.trim(),
+    kind: $("kindFilter").value,
+    group: $("groupFilter").value,
+    gather: $("gatherFilter").value,
+    country: $("countryFilter").value,
+    sort: $("sortFilter").value,
+    min_players: $("minPlayers").value.trim(),
+    per_page: $("perPage").value
+  };
+}
+
+function buildServerUrl(){
+  const filters = getFilters();
+  const params = new URLSearchParams();
+
+  params.set("page", String(currentPage));
+  params.set("per_page", filters.per_page);
+  params.set("sort", filters.sort);
+
+  if(filters.search) params.set("search", filters.search);
+  if(filters.kind) params.set("kind", filters.kind);
+  if(filters.group) params.set("group", filters.group);
+  if(filters.gather) params.set("gather", filters.gather);
+  if(filters.country) params.set("country", filters.country);
+
+  if(filters.min_players !== ""){
+    const minimum = Number(filters.min_players);
+    if(Number.isInteger(minimum) && minimum >= 0 && minimum <= 10000){
+      params.set("min_players", String(minimum));
+    }
+  }
+
+  return "/api/servers?" + params.toString();
+}
+
+async function loadServers(){
+  if(loadingServers) return;
+
+  loadingServers = true;
+  const requestId = ++lastServerRequest;
+
+  $("serverStatus").textContent = "Обновляем данные...";
+  $("serverList").innerHTML = '<div class="loading">Загружаем серверы...</div>';
+
+  try{
+    const response = await fetch(buildServerUrl(), {
+      cache:"no-store"
     });
+
+    const data = await response.json();
+
+    if(requestId !== lastServerRequest) return;
+    if(!response.ok) throw new Error(data.error || "Ошибка загрузки серверов");
+
+    currentServers = Array.isArray(data.servers) ? data.servers : [];
+    totalServers = Number(data.total) || 0;
+    totalPages = Number(data.pages) || 1;
+    currentPage = Number(data.page) || currentPage;
+
+    $("serverStatus").textContent = "Данные получены";
+    $("serverCount").innerHTML =
+      "Найдено серверов: <strong>" + formatNumber(totalServers) + "</strong>";
+
+    renderServers();
+    updatePagination();
+
+  }catch(error){
+    $("serverStatus").textContent = "Ошибка API";
+    $("serverCount").textContent = "Не удалось получить список серверов";
+    $("serverList").innerHTML = `
+      <div class="message error">
+        ${escapeHTML(error.message)}<br>
+        Проверь подключение и попробуй обновить страницу.
+      </div>
+    `;
+  }finally{
+    loadingServers = false;
+  }
 }
 
-function clearHistory() {
-    localStorage.removeItem("rustHistory");
-    showHistory();
+function renderServers(){
+  const container = $("serverList");
+  const favoritesOnly = $("favoritesOnly").checked;
+
+  let servers = currentServers;
+
+  if(favoritesOnly){
+    servers = servers.filter(server => isFavorite(server.id));
+  }
+
+  if(!servers.length){
+    container.innerHTML = `
+      <div class="empty" style="grid-column:1/-1">
+        ${favoritesOnly
+          ? "На этой странице нет избранных серверов."
+          : "Серверы не найдены. Попробуй изменить фильтры."}
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = servers.map(server => {
+    const id = String(server.id);
+    const favorite = isFavorite(id);
+    const players = formatNumber(server.current_players);
+    const maxPlayers = formatNumber(server.max_players);
+    const country = server.country_name || server.country || "Не указана";
+    const type = server.kind || (server.is_modded ? "modded" : "vanilla");
+    const group = server.group || "Не указан";
+    const gather = server.gather_bucket || (server.gather_rate ? server.gather_rate + "x" : "Не указан");
+    const connect = typeof server.connect === "string" && server.connect.startsWith("steam://")
+      ? server.connect
+      : "";
+    const details = safeHttpUrl(server.url);
+
+    return `
+      <article class="server-card">
+        <div class="server-top">
+          <h3 class="server-name">${escapeHTML(server.name)}</h3>
+          <span class="server-country">${escapeHTML(country)}</span>
+        </div>
+
+        <div class="server-tags">
+          <span class="tag ${server.is_online ? "orange-tag" : ""}">
+            ${server.is_online ? "● ОНЛАЙН" : "ОФЛАЙН"}
+          </span>
+          <span class="tag">${escapeHTML(type)}</span>
+          ${server.gather_bucket || server.gather_rate
+            ? `<span class="tag orange-tag">${escapeHTML(gather)}</span>` : ""}
+          ${server.is_official ? '<span class="tag">OFFICIAL</span>' : ""}
+          ${server.password_protected ? '<span class="tag">С ПАРОЛЕМ</span>' : ""}
+        </div>
+
+        <div class="server-info">
+          <div class="info-item">
+            <span>КАРТА</span>
+            <strong>${escapeHTML(server.map || "Нет данных")}</strong>
+          </div>
+          <div class="info-item">
+            <span>КОМАНДА</span>
+            <strong>${escapeHTML(group)}</strong>
+          </div>
+          <div class="info-item">
+            <span>ПОСЛЕДНИЙ ВАЙП</span>
+            <strong>${escapeHTML(formatDate(server.last_wipe_at))}</strong>
+          </div>
+          <div class="info-item">
+            <span>В ОЧЕРЕДИ</span>
+            <strong>${formatNumber(server.queued_players)}</strong>
+          </div>
+          <div class="info-item">
+            <span>АДРЕС</span>
+            <strong>${escapeHTML(server.ip || "Нет данных")}:${escapeHTML(server.game_port || "")}</strong>
+          </div>
+          <div class="info-item">
+            <span>МАКСИМУМ ИГРОКОВ</span>
+            <strong>${maxPlayers}</strong>
+          </div>
+        </div>
+
+        <div class="server-bottom">
+          <div class="online ${server.is_online ? "" : "offline"}">
+            ${players} / ${maxPlayers}
+          </div>
+
+          <div class="server-actions">
+            <button class="favorite-btn ${favorite ? "active" : ""}"
+              onclick="toggleFavorite('${escapeHTML(id)}')"
+              title="Избранное">${favorite ? "★" : "☆"}</button>
+
+            ${connect
+              ? `<a class="connect" href="${escapeHTML(connect)}">ПОДКЛЮЧИТЬСЯ</a>`
+              : ""}
+
+            ${details
+              ? `<a class="details" href="${escapeHTML(details)}" target="_blank" rel="noopener noreferrer">ПОДРОБНЕЕ ↗</a>`
+              : ""}
+          </div>
+        </div>
+      </article>
+    `;
+  }).join("");
 }
 
-/* =========================
-   START
-========================= */
+function updatePagination(){
+  $("pageInfo").textContent =
+    "Страница " + currentPage + " из " + totalPages;
 
+  $("prevPage").disabled = currentPage <= 1;
+  $("nextPage").disabled = currentPage >= totalPages;
+}
+
+function changePage(direction){
+  const next = currentPage + direction;
+
+  if(next < 1 || next > totalPages) return;
+
+  currentPage = next;
+  loadServers();
+
+  $("servers").scrollIntoView({behavior:"smooth"});
+}
+
+function applyFilters(){
+  currentPage = 1;
+  loadServers();
+}
+
+function resetFilters(){
+  $("serverSearch").value = "";
+  $("kindFilter").value = "";
+  $("groupFilter").value = "";
+  $("gatherFilter").value = "";
+  $("countryFilter").value = "";
+  $("sortFilter").value = "players";
+  $("minPlayers").value = "";
+  $("perPage").value = "20";
+  $("favoritesOnly").checked = false;
+
+  currentPage = 1;
+  loadServers();
+}
+
+/* Enter запускает поиск серверов */
+$("serverSearch").addEventListener("keydown", event => {
+  if(event.key === "Enter") applyFilters();
+});
+$("minPlayers").addEventListener("keydown", event => {
+  if(event.key === "Enter") applyFilters();
+});
+$("playerSearch").addEventListener("keydown", event => {
+  if(event.key === "Enter") searchPlayer();
+});
+
+/* Автообновление списка серверов раз в 60 секунд */
+setInterval(() => {
+  if(document.visibilityState === "visible"){
+    loadServers();
+  }
+}, 60000);
+
+/* Запуск */
 showHistory();
-loadServers(true);
-
+loadServers();
 </script>
 
 </body>
