@@ -1,0 +1,522 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rust Tracker</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #101113;
+    color: #eeeeee;
+    font-family: Arial, sans-serif;
+}
+
+header {
+    height: 75px;
+    background: #17191c;
+    border-bottom: 1px solid #292c30;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 8%;
+}
+
+.logo {
+    font-size: 25px;
+    font-weight: 900;
+    letter-spacing: 1px;
+}
+
+.logo span {
+    color: #e97832;
+}
+
+nav {
+    display: flex;
+    gap: 30px;
+}
+
+nav a {
+    color: #aaa;
+    text-decoration: none;
+    transition: .2s;
+}
+
+nav a:hover {
+    color: #e97832;
+}
+
+.hero {
+    min-height: 440px;
+    background:
+    linear-gradient(rgba(12,13,14,.85), rgba(12,13,14,.95)),
+    radial-gradient(circle at center, #754021, #101113 70%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 50px 20px;
+    text-align: center;
+}
+
+.hero h1 {
+    font-size: 65px;
+    font-weight: 900;
+    letter-spacing: 4px;
+}
+
+.hero h1 span {
+    color: #e97832;
+}
+
+.hero p {
+    color: #999;
+    margin-top: 15px;
+    font-size: 17px;
+}
+
+.search {
+    display: flex;
+    width: 100%;
+    max-width: 650px;
+    margin-top: 35px;
+    gap: 10px;
+}
+
+.search input {
+    flex: 1;
+    min-width: 0;
+    padding: 17px;
+    background: #202327;
+    border: 1px solid #393d42;
+    border-radius: 5px;
+    color: white;
+    outline: none;
+    font-size: 15px;
+}
+
+.search input:focus {
+    border-color: #e97832;
+}
+
+button {
+    background: #e97832;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 0 25px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: .2s;
+}
+
+button:hover {
+    background: #ff914c;
+    transform: translateY(-2px);
+}
+
+#searchResult {
+    width: 100%;
+    max-width: 650px;
+    margin-top: 20px;
+}
+
+.result {
+    background: #202327;
+    border: 1px solid #393d42;
+    padding: 20px;
+    border-radius: 7px;
+    text-align: left;
+}
+
+.result h3 {
+    color: #e97832;
+    margin-bottom: 10px;
+}
+
+main {
+    max-width: 1200px;
+    margin: auto;
+    padding: 40px 20px;
+}
+
+.section-title {
+    font-size: 25px;
+    margin-bottom: 25px;
+}
+
+.section-title span {
+    color: #e97832;
+}
+
+.features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.feature {
+    background: #191b1f;
+    border: 1px solid #292c30;
+    border-radius: 8px;
+    padding: 30px;
+    transition: .2s;
+}
+
+.feature:hover {
+    border-color: #e97832;
+    transform: translateY(-4px);
+}
+
+.feature h2 {
+    font-size: 20px;
+    margin-bottom: 12px;
+}
+
+.feature p {
+    color: #999;
+    font-size: 14px;
+}
+
+.content-section {
+    margin-top: 55px;
+}
+
+.server {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #191b1f;
+    border: 1px solid #292c30;
+    border-radius: 7px;
+    padding: 20px;
+    margin-bottom: 12px;
+    gap: 15px;
+}
+
+.server h3 {
+    margin-bottom: 7px;
+}
+
+.server p {
+    color: #999;
+    font-size: 13px;
+}
+
+.online {
+    color: #65d68a;
+    font-weight: bold;
+}
+
+.history-item {
+    background: #191b1f;
+    border: 1px solid #292c30;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.history-item span {
+    color: #999;
+    font-size: 13px;
+}
+
+.empty {
+    color: #777;
+    padding: 20px;
+    background: #191b1f;
+    border-radius: 6px;
+}
+
+footer {
+    margin-top: 60px;
+    padding: 30px;
+    background: #17191c;
+    text-align: center;
+    color: #777;
+    font-size: 13px;
+}
+
+@media (max-width: 700px) {
+    header {
+        padding: 0 15px;
+        height: auto;
+        min-height: 70px;
+        flex-wrap: wrap;
+        gap: 15px;
+        padding-top: 15px;
+        padding-bottom: 15px;
+    }
+
+    nav {
+        gap: 15px;
+        font-size: 13px;
+    }
+
+    .hero h1 {
+        font-size: 38px;
+    }
+
+    .hero p {
+        font-size: 14px;
+    }
+
+    .features {
+        grid-template-columns: 1fr;
+    }
+
+    .search {
+        flex-direction: column;
+    }
+
+    .search button {
+        padding: 16px;
+    }
+
+    .server {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div class="logo">RUST <span>TRACKER</span></div>
+
+    <nav>
+        <a href="#players">Игроки</a>
+        <a href="#servers">Серверы</a>
+        <a href="#history">История</a>
+    </nav>
+</header>
+
+<section class="hero">
+    <h1>RUST <span>TRACKER</span></h1>
+    <p>Отслеживай игроков, серверы и игровую статистику</p>
+
+    <div class="search">
+        <input id="playerSearch"
+        type="text"
+        placeholder="Введи ник или SteamID..."
+        onkeydown="if(event.key==='Enter') searchPlayer()">
+
+        <button onclick="searchPlayer()">ПОИСК</button>
+    </div>
+
+    <div id="searchResult"></div>
+</section>
+
+<main>
+
+<section id="players">
+    <h2 class="section-title">ПОИСК <span>ИГРОКОВ</span></h2>
+
+    <div class="features">
+        <div class="feature">
+            <h2>Профили</h2>
+            <p>Поиск игроков по SteamID и никнейму.</p>
+        </div>
+
+        <div class="feature">
+            <h2>Статистика</h2>
+            <p>Просмотр игровой статистики.</p>
+        </div>
+
+        <div class="feature">
+            <h2>Активность</h2>
+            <p>История игровых сессий.</p>
+        </div>
+    </div>
+</section>
+
+<section class="content-section" id="servers">
+    <h2 class="section-title">ИГРОВЫЕ <span>СЕРВЕРЫ</span></h2>
+
+    <div id="serverList"></div>
+</section>
+
+<section class="content-section" id="history">
+    <h2 class="section-title">ИСТОРИЯ <span>ПОИСКА</span></h2>
+
+    <div id="historyList"></div>
+    <button onclick="clearHistory()" style="padding:12px 20px;margin-top:15px">
+        ОЧИСТИТЬ ИСТОРИЮ
+    </button>
+</section>
+
+</main>
+
+<footer>
+    RUST TRACKER © 2026
+    <br><br>
+    Неофициальный фанатский проект. Не связан с Facepunch.
+</footer>
+
+<script>
+const players = [
+    {
+        name: "RustPlayer",
+        id: "76561198000000001",
+        hours: 1250,
+        kd: "2.45"
+    },
+    {
+        name: "Survivor",
+        id: "76561198000000002",
+        hours: 850,
+        kd: "1.80"
+    },
+    {
+        name: "Hunter",
+        id: "76561198000000003",
+        hours: 2300,
+        kd: "3.10"
+    }
+];
+
+const servers = [
+    {
+        name: "Rust Tracker | EU Main",
+        map: "Procedural Map",
+        players: "245/300"
+    },
+    {
+        name: "Rust Tracker | EU Solo",
+        map: "Procedural Map",
+        players: "120/200"
+    },
+    {
+        name: "Rust Tracker | EU Duo",
+        map: "Procedural Map",
+        players: "89/150"
+    }
+];
+
+function searchPlayer() {
+    const input = document
+        .getElementById("playerSearch")
+        .value.trim();
+
+    const result = document.getElementById("searchResult");
+
+    if (!input) {
+        result.innerHTML =
+            '<div class="result">Введи ник или SteamID.</div>';
+        return;
+    }
+
+    const player = players.find(p =>
+        p.name.toLowerCase() === input.toLowerCase() ||
+        p.id === input
+    );
+
+    if (player) {
+        result.innerHTML = `
+            <div class="result">
+                <h3>${escapeHTML(player.name)}</h3>
+                <p>SteamID: ${player.id}</p>
+                <p>Часы в Rust: ${player.hours}</p>
+                <p>K/D: ${player.kd}</p>
+                <p style="color:#65d68a;margin-top:10px">
+                    Демонстрационный профиль
+                </p>
+            </div>
+        `;
+    } else {
+        result.innerHTML = `
+            <div class="result">
+                <h3>Игрок не найден</h3>
+                <p>В демонстрационной базе такого игрока нет.</p>
+            </div>
+        `;
+    }
+
+    saveHistory(input);
+}
+
+function escapeHTML(value) {
+    return value.replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    })[char]);
+}
+
+function showServers() {
+    const container = document.getElementById("serverList");
+
+    container.innerHTML = servers.map(server => `
+        <div class="server">
+            <div>
+                <h3>${escapeHTML(server.name)}</h3>
+                <p>${escapeHTML(server.map)}</p>
+            </div>
+            <div class="online">
+                ${escapeHTML(server.players)}
+            </div>
+        </div>
+    `).join("");
+}
+
+function saveHistory(query) {
+    let history = JSON.parse(
+        localStorage.getItem("rustHistory") || "[]"
+    );
+
+    history = history.filter(item => item !== query);
+    history.unshift(query);
+    history = history.slice(0, 10);
+
+    localStorage.setItem("rustHistory", JSON.stringify(history));
+
+    showHistory();
+}
+
+function showHistory() {
+    const container = document.getElementById("historyList");
+
+    const history = JSON.parse(
+        localStorage.getItem("rustHistory") || "[]"
+    );
+
+    if (history.length === 0) {
+        container.innerHTML =
+            '<div class="empty">История пока пуста.</div>';
+        return;
+    }
+
+    container.innerHTML = history.map(item => `
+        <div class="history-item">
+            <strong>${escapeHTML(item)}</strong>
+            <span>Поиск</span>
+        </div>
+    `).join("");
+}
+
+function clearHistory() {
+    localStorage.removeItem("rustHistory");
+    showHistory();
+}
+
+showServers();
+showHistory();
+</script>
+
+</body>
+</html>
