@@ -406,7 +406,8 @@ const servers = [
     }
 ];
 
-function searchPlayer() {
+
+async function searchPlayer() {
     const input = document
         .getElementById("playerSearch")
         .value.trim();
@@ -415,38 +416,85 @@ function searchPlayer() {
 
     if (!input) {
         result.innerHTML =
-            '<div class="result">Введи ник или SteamID.</div>';
+            '<div class="result">Введи SteamID или ссылку профиля.</div>';
         return;
     }
 
-    const player = players.find(p =>
-        p.name.toLowerCase() === input.toLowerCase() ||
-        p.id === input
-    );
+    result.innerHTML =
+        '<div class="result">Поиск игрока в Steam...</div>';
 
-    if (player) {
+    try {
+        let steamInput = input;
+
+        // Поддержка ссылок Steam Community
+        const match = input.match(
+            /steamcommunity\.com\/(?:profiles\/(\d+)|id\/([^/?]+))/
+        );
+
+        if (match) {
+            steamInput = match[1] || match[2];
+        }
+
+        const response = await fetch(
+            "/api/player?steamid=" + encodeURIComponent(steamInput)
+        );
+
+        const player = await response.json();
+
+        if (!response.ok) {
+            throw new Error(player.error || "Игрок не найден");
+        }
+
+        const visibility = player.visibility === 3
+            ? "Публичный профиль"
+            : "Закрытый или ограниченный профиль";
+
         result.innerHTML = `
             <div class="result">
-                <h3>${escapeHTML(player.name)}</h3>
-                <p>SteamID: ${player.id}</p>
-                <p>Часы в Rust: ${player.hours}</p>
-                <p>K/D: ${player.kd}</p>
-                <p style="color:#65d68a;margin-top:10px">
-                    Демонстрационный профиль
+                <div style="display:flex;align-items:center;gap:15px">
+                    <img
+                        src="${escapeHTML(player.avatar)}"
+                        alt="Аватар"
+                        width="75"
+                        height="75"
+                        style="border-radius:8px"
+                    >
+
+                    <div>
+                        <h3>${escapeHTML(player.name)}</h3>
+                        <p>${visibility}</p>
+                    </div>
+                </div>
+
+                <p style="margin-top:15px">
+                    SteamID: ${escapeHTML(player.steamid)}
+                </p>
+
+                <p style="margin-top:10px">
+                    <a
+                        href="${escapeHTML(player.profile)}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style="color:#e97832"
+                    >
+                        Открыть профиль Steam
+                    </a>
                 </p>
             </div>
         `;
-    } else {
+
+        saveHistory(input);
+
+    } catch (error) {
         result.innerHTML = `
             <div class="result">
-                <h3>Игрок не найден</h3>
-                <p>В демонстрационной базе такого игрока нет.</p>
+                <h3>Ошибка поиска</h3>
+                <p>${escapeHTML(error.message)}</p>
             </div>
         `;
     }
-
-    saveHistory(input);
 }
+
 
 function escapeHTML(value) {
     return value.replace(/[&<>"']/g, char => ({
