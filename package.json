@@ -1,0 +1,7 @@
+{
+  "name": "rust-tracker",
+  "version": "1.0.0",
+  "dependencies": {
+    "@liamcottle/rustplus.js": "^1.1.0"
+  }
+}
