@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -128,7 +129,6 @@ footer{margin-top:40px;padding:28px 20px;background:#17191d;border-top:1px solid
   <nav>
     <a href="#players">Игроки</a>
     <a href="#servers">Серверы</a>
-    <a href="#rustplus">Rust+ Радар</a>
     <a href="#history">История</a>
   </nav>
 </header>
@@ -172,3 +172,492 @@ footer{margin-top:40px;padding:28px 20px;background:#17191d;border-top:1px solid
         </select>
       </div>
       <div class="field">
+        <label for="kindFilter">Тип сервера</label>
+        <select id="kindFilter">
+          <option value="">Все типы</option>
+          <option value="vanilla">Vanilla</option>
+          <option value="modded">Modded</option>
+          <option value="official">Official</option>
+          <option value="pure">Pure</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="groupFilter">Размер команды</label>
+        <select id="groupFilter">
+          <option value="">Все команды</option>
+          <option value="1">Solo</option>
+          <option value="2">Duo</option>
+          <option value="3">Trio</option>
+          <option value="4">Quad</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="gatherFilter">Множитель</label>
+        <select id="gatherFilter">
+          <option value="">Любой множитель</option>
+          <option value="1x">1x</option>
+          <option value="2x">2x</option>
+          <option value="3x">3x</option>
+          <option value="5x">5x</option>
+          <option value="10x">10x</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="countryFilter">Страна</label>
+        <select id="countryFilter">
+          <option value="">Все страны</option>
+          <option value="RU">Россия</option>
+          <option value="GB">Великобритания</option>
+          <option value="DE">Германия</option>
+          <option value="US">США</option>
+          <option value="FR">Франция</option>
+          <option value="NL">Нидерланды</option>
+          <option value="PL">Польша</option>
+          <option value="FI">Финляндия</option>
+          <option value="SE">Швеция</option>
+          <option value="CA">Канада</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="sortFilter">Сортировка</label>
+        <select id="sortFilter">
+          <option value="players">По онлайну</option>
+          <option value="votes">По голосам</option>
+          <option value="rating">По рейтингу</option>
+          <option value="wiped">По вайпу</option>
+          <option value="name">По названию</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="minPlayers">Минимум игроков</label>
+        <input id="minPlayers" type="number" min="0" max="10000" placeholder="Например, 50">
+      </div>
+      <div class="field">
+        <label for="perPage">Серверов на странице</label>
+        <select id="perPage">
+          <option value="20">20 серверов</option>
+          <option value="50">50 серверов</option>
+          <option value="100">100 серверов</option>
+        </select>
+      </div>
+    </div>
+    <div class="filter-actions">
+      <button onclick="applyFilters()">НАЙТИ СЕРВЕРЫ</button>
+      <button class="secondary" onclick="resetFilters()">СБРОСИТЬ</button>
+      <button class="secondary" onclick="loadServers()">↻ ОБНОВИТЬ</button>
+      <label class="favorite-filter"><input type="checkbox" id="favoritesOnly" onchange="renderServers()"> Только избранное</label>
+    </div>
+  </div>
+
+  <div class="server-summary">
+    <div id="serverCount">Загрузка серверов...</div>
+    <div id="serverStatus">Подключение к API...</div>
+  </div>
+  <div id="serverList" class="server-list"><div class="loading">Загружаем серверы Rust...</div></div>
+  <div class="pagination">
+    <button class="secondary" id="prevPage" onclick="changePage(-1)">НАЗАД</button>
+    <span id="pageInfo">Страница 1</span>
+    <button class="secondary" id="nextPage" onclick="changePage(1)">ДАЛЕЕ</button>
+  </div>
+</section>
+
+<section class="section" id="history">
+  <h2 class="section-title">ИСТОРИЯ <span>ПОИСКА</span></h2>
+  <div id="historyList"></div>
+  <button class="secondary" onclick="clearHistory()" style="margin-top:12px">ОЧИСТИТЬ ИСТОРИЮ</button>
+</section>
+</main>
+
+<footer>
+  RUST RADAR © 2026<br>
+  Неофициальный фанатский проект. Не связан с Valve или Facepunch.<br>
+  Данные серверов: <a href="https://rust.wiki/" target="_blank" rel="noopener">rust.wiki</a>
+</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+
+let currentPage = 1;
+let totalPages = 1;
+let totalServers = 0;
+let currentServers = [];
+let loadingServers = false;
+let lastRequestId = 0;
+
+const ASIA = ["JP","KR","CN","TW","HK","SG","MY","TH","VN","ID","PH","IN","AU","NZ"];
+const EU = ["GB","DE","FR","NL","PL","FI","SE","NO","DK","BE","AT","CH","ES","IT","PT","IE","CZ","SK","HU","RO","BG","GR","UA","LT","LV","EE","IS","LU"];
+
+function escapeHTML(value){
+  return String(value ?? "").replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  })[c]);
+}
+function safeHttpUrl(value){
+  try{const u=new URL(value);return ["https:","http:"].includes(u.protocol)?u.href:"";}
+  catch{return "";}
+}
+function safeConnect(value){
+  return typeof value==="string" && /^steam:\/\/connect\/[\w.:[\]-]+:\d+$/i.test(value) ? value : "";
+}
+function formatNumber(value){
+  const n=Number(value);
+  return Number.isFinite(n)?n.toLocaleString("ru-RU"):"—";
+}
+function formatHours(minutes){
+  if(minutes==null)return "—";
+  return (Number(minutes)/60).toFixed(1).replace(".",",")+" ч";
+}
+function formatDate(value){
+  if(!value)return "Нет данных";
+  const d=new Date(value);
+  return Number.isNaN(d.getTime())?"Нет данных":d.toLocaleDateString("ru-RU");
+}
+
+/* История поиска */
+function getHistory(){
+  try{const v=JSON.parse(localStorage.getItem("rustHistory")||"[]");return Array.isArray(v)?v:[];}
+  catch{return [];}
+}
+function saveHistory(query){
+  let h=getHistory().filter(x=>x!==query);
+  h.unshift(query);
+  localStorage.setItem("rustHistory",JSON.stringify(h.slice(0,10)));
+  showHistory();
+}
+function showHistory(){
+  const h=getHistory();
+  $("historyList").innerHTML=h.length?h.map((item,i)=>`
+    <div class="history-item">
+      <strong>${escapeHTML(item)}</strong>
+      <button onclick="repeatSearch(${i})">ОТКРЫТЬ</button>
+    </div>`).join(""):'<div class="empty">История пока пуста.</div>';
+}
+function repeatSearch(i){
+  const q=getHistory()[i];
+  if(!q)return;
+  $("playerSearch").value=q;
+  searchPlayer();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function clearHistory(){
+  localStorage.removeItem("rustHistory");
+  showHistory();
+}
+
+/* Steam */
+async function searchPlayer(){
+  const input=$("playerSearch").value.trim();
+  const result=$("searchResult");
+  const button=$("playerSearchBtn");
+  if(!input){result.innerHTML='<div class="result">Введи SteamID или ссылку профиля.</div>';return;}
+
+  button.disabled=true;
+  result.innerHTML='<div class="result loading">Ищем игрока в Steam...</div>';
+
+  try{
+    let steamInput=input;
+    const match=input.match(/steamcommunity\.com\/(?:profiles\/(\d+)|id\/([^/?#]+))/i);
+    if(match)steamInput=match[1]||match[2];
+
+    const response=await fetch("/api/player?steamid="+encodeURIComponent(steamInput));
+    const player=await response.json();
+    if(!response.ok)throw new Error(player.error||"Игрок не найден");
+
+    const avatar=safeHttpUrl(player.avatar);
+    const profile=safeHttpUrl(player.profile);
+    const visibility=player.visibility===3?"Публичный профиль":"Закрытый или ограниченный профиль";
+
+    result.innerHTML=`
+      <div class="result">
+        <div class="profile-head">
+          ${avatar?`<img class="avatar" src="${escapeHTML(avatar)}" alt="Аватар">`:""}
+          <div>
+            <h2 class="profile-name">${escapeHTML(player.name)}</h2>
+            <div class="muted">${visibility}</div>
+            <div class="muted">SteamID: ${escapeHTML(player.steamid)}</div>
+          </div>
+        </div>
+        ${profile?`<a class="profile-link" href="${escapeHTML(profile)}" target="_blank" rel="noopener noreferrer">ОТКРЫТЬ ПРОФИЛЬ STEAM ↗</a>`:""}
+        <div class="muted" style="margin-top:10px">Дата регистрации Steam: ${formatDate(Number(player.created)*1000)}</div>
+        <div id="rustLoading" class="loading">Получаем статистику Rust...</div>
+        <div id="rustStats"></div>
+      </div>`;
+
+    saveHistory(input);
+
+    const statsResponse=await fetch("/api/rust-stats?steamid="+encodeURIComponent(player.steamid));
+    const stats=await statsResponse.json();
+    if(!statsResponse.ok)throw new Error(stats.error||"Ошибка получения статистики");
+    $("rustLoading")?.remove();
+    renderRustStats(stats);
+  }catch(error){
+    result.innerHTML=`<div class="result"><h3 class="orange">Ошибка поиска</h3><p class="muted">${escapeHTML(error.message)}</p></div>`;
+  }finally{button.disabled=false;}
+}
+
+function renderRustStats(data){
+  const container=$("rustStats");
+  if(!container)return;
+  if(!data.available||!data.ownsRust){
+    container.innerHTML=`<div class="status neutral">${escapeHTML(data.message||"Rust не найден в доступной библиотеке Steam. Возможно, библиотека скрыта настройками приватности.")}</div>`;
+    return;
+  }
+
+  let html=`
+    <div class="stats">
+      <div class="stat"><span>ВСЕГО В RUST</span><strong>${formatNumber(data.hours)} ч</strong></div>
+      <div class="stat"><span>ЗА 2 НЕДЕЛИ</span><strong>${formatHours(data.recentMinutes)}</strong></div>
+      <div class="stat"><span>УБИЙСТВА</span><strong>${data.kills==null?"—":formatNumber(data.kills)}</strong></div>
+      <div class="stat"><span>СМЕРТИ</span><strong>${data.deaths==null?"—":formatNumber(data.deaths)}</strong></div>
+      <div class="stat"><span>K/D</span><strong>${data.kd==null?"—":escapeHTML(data.kd)}</strong></div>
+      <div class="stat"><span>ДОСТИЖЕНИЯ</span><strong>${data.achievements?formatNumber(data.achievements.unlocked)+"/"+formatNumber(data.achievements.total):"—"}</strong></div>
+    </div>`;
+
+  if(!data.statsAvailable)html+='<div class="status neutral">Игровые показатели недоступны. Проверь настройки приватности Steam.</div>';
+
+  if(Array.isArray(data.allStats)&&data.allStats.length){
+    html+=`<div class="panel"><h3>ДРУГИЕ ПОКАЗАТЕЛИ RUST</h3><div class="stat-list">
+      ${data.allStats.slice(0,30).map(x=>`<div class="stat-row"><span>${escapeHTML(x.name)}</span><strong>${formatNumber(x.value)}</strong></div>`).join("")}
+    </div></div>`;
+  }
+  if(data.achievements){
+    const unlocked=(data.achievements.items||[]).filter(x=>x.achieved).slice(0,10);
+    html+=`<div class="panel"><h3>ДОСТИЖЕНИЯ</h3><p class="muted">Открыто ${formatNumber(data.achievements.unlocked)} из ${formatNumber(data.achievements.total)}</p>
+      ${unlocked.length?unlocked.map(x=>`<div class="achievement"><strong>✓ ${escapeHTML(x.name)}</strong><small>${escapeHTML(x.description)}</small></div>`).join(""):'<p class="muted">Нет открытых достижений для отображения.</p>'}
+    </div>`;
+  }
+  if(data.bans){
+    const banned=Boolean(data.bans.vacBanned)||Number(data.bans.gameBanned)>0;
+    html+=`<div class="panel"><h3>БЛОКИРОВКИ STEAM</h3>
+      <div class="status ${banned?"bad":"good"}">${banned?"Steam сообщает о наличии блокировок.":"Steam не сообщает о VAC или игровых блокировках."}</div>
+      <p class="muted" style="margin-top:10px">VAC-блокировки: ${formatNumber(data.bans.vacBans)}<br>Игровые блокировки: ${formatNumber(data.bans.gameBanned)}<br>Дней с последней блокировки: ${formatNumber(data.bans.daysSinceLastBan)}</p>
+    </div>`;
+  }
+  container.innerHTML=html;
+}
+
+/* Избранное */
+function getFavorites(){
+  try{const v=JSON.parse(localStorage.getItem("rustFavorites")||"[]");return Array.isArray(v)?v.map(String):[];}
+  catch{return [];}
+}
+function isFavorite(id){return getFavorites().includes(String(id));}
+function toggleFavorite(id){
+  let f=getFavorites();
+  id=String(id);
+  f=f.includes(id)?f.filter(x=>x!==id):[...f,id];
+  localStorage.setItem("rustFavorites",JSON.stringify(f));
+  renderServers();
+}
+
+/* Фильтры серверов */
+function getFilters(){
+  return {
+    search:$("serverSearch").value.trim(),
+    region:$("regionFilter").value,
+    kind:$("kindFilter").value,
+    group:$("groupFilter").value,
+    gather:$("gatherFilter").value,
+    country:$("countryFilter").value,
+    sort:$("sortFilter").value,
+    min_players:$("minPlayers").value.trim(),
+    per_page:$("perPage").value
+  };
+}
+function buildServerUrl(){
+  const f=getFilters();
+  const p=new URLSearchParams();
+  p.set("page",String(currentPage));
+  p.set("per_page",f.per_page);
+  p.set("sort",f.sort);
+  if(f.search)p.set("search",f.search);
+  if(f.kind==="vanilla"||f.kind==="modded")p.set("kind",f.kind);
+  if(f.group)p.set("group",f.group);
+  if(f.gather)p.set("gather",f.gather);
+  if(f.country)p.set("country",f.country);
+  if(f.min_players!==""){
+    const n=Number(f.min_players);
+    if(Number.isInteger(n)&&n>=0&&n<=10000)p.set("min_players",String(n));
+  }
+  return "/api/servers?"+p.toString();
+}
+
+function getGather(server){
+  const bucket=String(server.gather_bucket||"").toLowerCase().replace(/\s/g,"");
+  if(bucket)return bucket.endsWith("x")?bucket:bucket+"x";
+  const rate=Number(server.gather_rate);
+  return Number.isFinite(rate)&&rate>0?rate+"x":"";
+}
+function getGroup(server){
+  const raw=String(server.group||"").toLowerCase();
+  const limit=Number(server.group_limit);
+  if(raw.includes("solo")||limit===1)return "1";
+  if(raw.includes("duo")||limit===2)return "2";
+  if(raw.includes("trio")||limit===3)return "3";
+  if(raw.includes("quad")||limit===4)return "4";
+  return "";
+}
+function getRegion(server){
+  const code=String(server.country||"").toUpperCase();
+  const tags=(server.tags||[]).map(x=>String(x).toLowerCase());
+  if(code==="RU")return "RU";
+  if(ASIA.includes(code))return "ASIA";
+  if(EU.includes(code)||tags.includes("eu"))return "EU";
+  if(["US","CA","MX"].includes(code))return "US";
+  return "";
+}
+function hasPureTag(server){
+  return (server.tags||[]).some(x=>String(x).toLowerCase()==="pure");
+}
+function matchesFilters(server,f){
+  if(f.region&&getRegion(server)!==f.region)return false;
+  if(f.kind==="official"&&!server.is_official)return false;
+  if(f.kind==="pure"&&!hasPureTag(server))return false;
+  if(f.kind==="vanilla"&&String(server.kind).toLowerCase()!=="vanilla")return false;
+  if(f.kind==="modded"&&String(server.kind).toLowerCase()!=="modded")return false;
+  if(f.group&&getGroup(server)!==f.group)return false;
+  if(f.gather&&getGather(server)!==f.gather)return false;
+  if(f.country&&String(server.country).toUpperCase()!==f.country)return false;
+  if(f.min_players!==""&&Number(server.current_players)<Number(f.min_players))return false;
+  return true;
+}
+
+async function loadServers(){
+  if(loadingServers)return;
+  loadingServers=true;
+  const requestId=++lastRequestId;
+  $("serverStatus").textContent="Обновляем данные...";
+  $("serverList").innerHTML='<div class="loading">Загружаем серверы...</div>';
+
+  try{
+    const response=await fetch(buildServerUrl(),{cache:"no-store"});
+    const data=await response.json();
+    if(requestId!==lastRequestId)return;
+    if(!response.ok)throw new Error(data.error||"Ошибка загрузки серверов");
+
+    currentServers=Array.isArray(data.servers)?data.servers:[];
+    totalServers=Number(data.total)||0;
+    totalPages=Number(data.pages)||1;
+    currentPage=Number(data.page)||currentPage;
+
+    $("serverStatus").textContent="Данные получены";
+    renderServers();
+    updatePagination();
+  }catch(error){
+    $("serverStatus").textContent="Ошибка API";
+    $("serverCount").textContent="Не удалось получить список серверов";
+    $("serverList").innerHTML=`<div class="message error">${escapeHTML(error.message)}<br>Попробуй обновить страницу.</div>`;
+  }finally{
+    loadingServers=false;
+  }
+}
+
+function renderServers(){
+  const f=getFilters();
+  let servers=currentServers.filter(s=>matchesFilters(s,f));
+
+  if($("favoritesOnly").checked)servers=servers.filter(s=>isFavorite(s.id));
+
+  if(f.sort==="players")servers.sort((a,b)=>(Number(b.current_players)||0)-(Number(a.current_players)||0));
+  if(f.sort==="votes")servers.sort((a,b)=>(Number(b.votes)||0)-(Number(a.votes)||0));
+  if(f.sort==="rating")servers.sort((a,b)=>(Number(b.rating)||0)-(Number(a.rating)||0));
+  if(f.sort==="wiped")servers.sort((a,b)=>new Date(b.last_wipe_at||0)-new Date(a.last_wipe_at||0));
+  if(f.sort==="name")servers.sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""),"ru"));
+
+  $("serverCount").innerHTML=`На этой странице: <strong>${formatNumber(servers.length)}</strong> · Всего в базе: <strong>${formatNumber(totalServers)}</strong>`;
+
+  if(!servers.length){
+    $("serverList").innerHTML='<div class="empty" style="grid-column:1/-1">Серверы не найдены. Измени фильтры или перейди на другую страницу.</div>';
+    return;
+  }
+
+  $("serverList").innerHTML=servers.map(server=>{
+    const id=String(server.id);
+    const favorite=isFavorite(id);
+    const players=formatNumber(server.current_players);
+    const maxPlayers=formatNumber(server.max_players);
+    const country=server.country_name||server.country||"Не указана";
+    const type=server.kind||"Не указан";
+    const group=server.group||server.group_limit||"Не указан";
+    const gather=getGather(server);
+    const connect=safeConnect(server.connect);
+    const details=safeHttpUrl(server.url);
+    const ip=server.ip||"";
+    const port=server.game_port||"";
+    const tags=Array.isArray(server.tags)?server.tags.slice(0,5):[];
+
+    return `<article class="server-card">
+      <div class="server-top">
+        <h3 class="server-name">${escapeHTML(server.name)}</h3>
+        <span class="server-country">${escapeHTML(country)}</span>
+      </div>
+      <div class="server-tags">
+        <span class="tag ${server.is_online?"orange-tag":""}">${server.is_online?"● ОНЛАЙН":"ОФЛАЙН"}</span>
+        <span class="tag">${escapeHTML(type)}</span>
+        ${gather?`<span class="tag orange-tag">${escapeHTML(gather)}</span>`:""}
+        ${server.is_official?'<span class="tag">OFFICIAL</span>':""}
+        ${server.password_protected?'<span class="tag">С ПАРОЛЕМ</span>':""}
+        ${tags.map(t=>`<span class="tag">${escapeHTML(t)}</span>`).join("")}
+      </div>
+      <div class="server-info">
+        <div class="info-item"><span>КАРТА</span><strong>${escapeHTML(server.map||"Нет данных")}</strong></div>
+        <div class="info-item"><span>КОМАНДА</span><strong>${escapeHTML(group)}</strong></div>
+        <div class="info-item"><span>ПОСЛЕДНИЙ ВАЙП</span><strong>${escapeHTML(formatDate(server.last_wipe_at))}</strong></div>
+        <div class="info-item"><span>В ОЧЕРЕДИ</span><strong>${formatNumber(server.queued_players)}</strong></div>
+        <div class="info-item"><span>АДРЕС</span><strong>${escapeHTML(ip)}:${escapeHTML(port)}</strong></div>
+        <div class="info-item"><span>МАКСИМУМ ИГРОКОВ</span><strong>${maxPlayers}</strong></div>
+      </div>
+      <div class="server-bottom">
+        <div class="online ${server.is_online?"":"offline"}">${players} / ${maxPlayers}</div>
+        <div class="server-actions">
+          <button class="favorite-btn ${favorite?"active":""}" onclick="toggleFavorite('${escapeHTML(id)}')" title="Избранное">${favorite?"★":"☆"}</button>
+          ${connect?`<a class="connect" href="${escapeHTML(connect)}">ПОДКЛЮЧИТЬСЯ</a>`:""}
+          ${details?`<a class="details" href="${escapeHTML(details)}" target="_blank" rel="noopener noreferrer">ПОДРОБНЕЕ ↗</a>`:""}
+        </div>
+      </div>
+    </article>`;
+  }).join("");
+}
+
+function updatePagination(){
+  $("pageInfo").textContent=`Страница ${currentPage} из ${totalPages}`;
+  $("prevPage").disabled=currentPage<=1;
+  $("nextPage").disabled=currentPage>=totalPages;
+}
+function changePage(direction){
+  const next=currentPage+direction;
+  if(next<1||next>totalPages)return;
+  currentPage=next;
+  loadServers();
+  $("servers").scrollIntoView({behavior:"smooth"});
+}
+function applyFilters(){
+  currentPage=1;
+  loadServers();
+}
+function resetFilters(){
+  ["serverSearch","minPlayers"].forEach(id=>$(id).value="");
+  ["regionFilter","kindFilter","groupFilter","gatherFilter","countryFilter"].forEach(id=>$(id).value="");
+  $("sortFilter").value="players";
+  $("perPage").value="20";
+  $("favoritesOnly").checked=false;
+  currentPage=1;
+  loadServers();
+}
+
+/* Поиск по Enter */
+$("serverSearch").addEventListener("keydown",e=>{if(e.key==="Enter")applyFilters();});
+$("minPlayers").addEventListener("keydown",e=>{if(e.key==="Enter")applyFilters();});
+$("playerSearch").addEventListener("keydown",e=>{if(e.key==="Enter")searchPlayer();});
+
+/* Автообновление */
+setInterval(()=>{
+  if(document.visibilityState==="visible"&&!loadingServers)loadServers();
+},60000);
+
+/* Запуск */
+showHistory();
+loadServers();
+</script>
+</body>
+</html>
