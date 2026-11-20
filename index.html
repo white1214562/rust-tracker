@@ -129,7 +129,10 @@ footer{margin-top:40px;padding:28px 20px;background:#17191d;border-top:1px solid
   <nav>
     <a href="#players">Игроки</a>
     <a href="#servers">Серверы</a>
+    <a href="#rustplus">Rust+ Радар</a>
     <a href="#history">История</a>
+  </nav>
+
   </nav>
 </header>
 
@@ -258,6 +261,13 @@ footer{margin-top:40px;padding:28px 20px;background:#17191d;border-top:1px solid
     <button class="secondary" id="prevPage" onclick="changePage(-1)">НАЗАД</button>
     <span id="pageInfo">Страница 1</span>
     <button class="secondary" id="nextPage" onclick="changePage(1)">ДАЛЕЕ</button>
+  </div>
+</section>
+  
+<section class="section" id="rustplus">
+  <h2 class="section-title">RUST+ <span>АВТО-РАДАР</span></h2>
+  <div class="toolbar" id="rp-container">
+    <div class="loading">Проверка авторизации Steam...</div>
   </div>
 </section>
 
@@ -658,6 +668,72 @@ setInterval(()=>{
 /* Запуск */
 showHistory();
 loadServers();
+  /* Rust+ Авто-радар */
+async function loadRustPlusProfile() {
+  const container = $("rp-container");
+  if (!container) return;
+  try {
+    const res = await fetch('/api/auth?action=me');
+    const data = await res.json();
+
+    if (!data.loggedIn || !data.user) {
+      container.innerHTML = `
+        <div style="text-align:center;padding:15px">
+          <p class="muted" style="margin-bottom:15px">Войдите через Steam, чтобы автоматически привязать сервер в игре и включить оповещения в командный чат.</p>
+          <a href="/api/auth?action=login"><button style="background:#171a21;border:1px solid var(--orange);padding:13px 22px">🎮 ВОЙТИ ЧЕРЕЗ STEAM</button></a>
+        </div>`;
+      return;
+    }
+
+    const u = data.user;
+    const isPaired = Boolean(u.server_ip && u.player_token);
+
+    container.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;border-bottom:1px solid var(--border);padding-bottom:14px;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:12px">
+          ${u.avatar ? `<img src="${escapeHTML(u.avatar)}" style="width:46px;height:46px;border-radius:8px;border:2px solid var(--orange)">` : ''}
+          <div>
+            <strong style="font-size:16px;color:var(--orange)">${escapeHTML(u.username)}</strong>
+            <div class="muted" style="font-size:12px">SteamID: ${escapeHTML(u.steam_id)}</div>
+          </div>
+        </div>
+        <a href="/api/auth?action=logout" class="secondary" style="padding:8px 12px;border-radius:6px;font-size:12px;color:#eee">Выйти</a>
+      </div>
+
+      ${isPaired
+        ? `<div class="status good">🟢 <b>Сервер привязан:</b> ${escapeHTML(u.server_ip)}:${escapeHTML(u.server_port)} — радар активен и готов писать в чат команды!</div>`
+        : `<div class="status neutral">🟡 <b>Ожидание привязки:</b> Зайдите в Rust → создайте команду (Tab) → нажмите <b>Esc → Rust+ → Подключить (Pair)</b>. Сервер появится здесь автоматически!</div>`
+      }
+
+      <div style="display:flex;flex-wrap:wrap;gap:18px;margin-top:16px">
+        <label class="favorite-filter"><input type="checkbox" id="chk-heli" ${u.notify_heli ? 'checked' : ''} onchange="saveRadarSettings()"> 🚁 Оповещать о Патрульном вертолёте</label>
+        <label class="favorite-filter"><input type="checkbox" id="chk-cargo" ${u.notify_cargo ? 'checked' : ''} onchange="saveRadarSettings()"> 🚢 Оповещать о Корабле (Cargo)</label>
+        <label class="favorite-filter"><input type="checkbox" id="chk-cmd" ${u.chat_commands ? 'checked' : ''} onchange="saveRadarSettings()"> 💬 Команды в чате (!pop, !time)</label>
+      </div>
+      <div id="rp-save-msg" style="margin-top:10px;font-size:12px;color:var(--green)"></div>
+    `;
+  } catch (e) {
+    container.innerHTML = `<div class="status bad">Ошибка загрузки профиля: ${escapeHTML(e.message)}</div>`;
+  }
+}
+
+async function saveRadarSettings() {
+  const notify_heli = $("chk-heli").checked;
+  const notify_cargo = $("chk-cargo").checked;
+  const chat_commands = $("chk-cmd").checked;
+  const msg = $("rp-save-msg");
+
+  await fetch('/api/auth?action=settings', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ notify_heli, notify_cargo, chat_commands })
+  });
+  msg.textContent = '✅ Настройки сохранены в базе!';
+  setTimeout(() => msg.textContent = '', 2500);
+}
+
+loadRustPlusProfile();
+
 </script>
 </body>
 </html>
