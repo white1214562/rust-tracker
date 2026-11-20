@@ -1,3 +1,4 @@
+
 const { createClient } = require('@supabase/supabase-js');
 const { randomBytes } = require('crypto');
 
@@ -106,7 +107,10 @@ module.exports = async function handler(req, res) {
 
             const verificationText = await verification.text();
 
-            if (!verification.ok || !/^is_valid:true\s*$/m.test(verificationText)) {
+            if (
+                !verification.ok ||
+                !/^is_valid:true\s*$/m.test(verificationText)
+            ) {
                 return res.status(401).send('Steam не подтвердил авторизацию.');
             }
 
@@ -166,7 +170,15 @@ module.exports = async function handler(req, res) {
 
             const { data: user, error } = await supabase
                 .from('users')
-                .select('steam_id, username, avatar, notify_heli, notify_cargo, chat_commands')
+                .select(`
+                    steam_id,
+                    username,
+                    avatar,
+                    notify_heli,
+                    notify_cargo,
+                    notify_team_deaths,
+                    chat_commands
+                `)
                 .eq('steam_id', steamId)
                 .maybeSingle();
 
@@ -186,11 +198,20 @@ module.exports = async function handler(req, res) {
             const steamId = getSession(req);
 
             if (!steamId) {
-                return res.status(401).json({ error: 'Не авторизован' });
+                return res.status(401).json({
+                    error: 'Не авторизован'
+                });
             }
 
             const body = req.body || {};
-            const allowed = ['notify_heli', 'notify_cargo', 'chat_commands'];
+
+            const allowed = [
+                'notify_heli',
+                'notify_cargo',
+                'notify_team_deaths',
+                'chat_commands'
+            ];
+
             const update = {};
 
             for (const key of allowed) {
@@ -200,7 +221,9 @@ module.exports = async function handler(req, res) {
             }
 
             if (!Object.keys(update).length) {
-                return res.status(400).json({ error: 'Нет настроек для сохранения.' });
+                return res.status(400).json({
+                    error: 'Нет настроек для сохранения.'
+                });
             }
 
             const { error } = await supabase
@@ -210,7 +233,9 @@ module.exports = async function handler(req, res) {
 
             if (error) throw error;
 
-            return res.status(200).json({ success: true });
+            return res.status(200).json({
+                success: true
+            });
         }
 
         if (action === 'logout' && req.method === 'GET') {
@@ -222,7 +247,9 @@ module.exports = async function handler(req, res) {
             return res.redirect('/');
         }
 
-        return res.status(400).json({ error: 'Неизвестное действие' });
+        return res.status(400).json({
+            error: 'Неизвестное действие'
+        });
 
     } catch (error) {
         console.error('Auth error:', error.message);
