@@ -864,15 +864,29 @@ function getEventPlayer(event){
     "Неизвестный игрок";
 }
 
-function getEventSquare(event){
-  const data=event.event_data||{};
 
-  return data.square||
-    data.grid||
-    data.death_square||
-    data.deathSquare||
-    "Квадрат не указан";
+function getEventSquare(event) {
+  const data = event.event_data || {};
+
+  // Проверяем реальные координаты Rust
+  if (
+    Number.isFinite(Number(data.x)) &&
+    Number.isFinite(Number(data.y)) &&
+    data.x !== null &&
+    data.y !== null
+  ) {
+    return `X: ${Number(data.x).toFixed(1)} | Y: ${Number(data.y).toFixed(1)}`;
+  }
+
+  return (
+    data.square ||
+    data.grid ||
+    data.death_square ||
+    data.deathSquare ||
+    "Координаты не указаны"
+  );
 }
+
 
 function getEventTitle(event){
   const type=String(event.event_type||"").toLowerCase();
