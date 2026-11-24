@@ -234,6 +234,14 @@ footer{background:#171321;border-top-color:#3a3150}
 .rp-command-row{display:flex;gap:8px;flex-wrap:wrap}
 .rp-command-row button{flex:1;min-width:110px}
 .rp-hint{font-size:11px;color:var(--muted);line-height:1.6}
+.rp-dashboard-meta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:12px;color:var(--muted);font-size:11px}
+.rp-connection-state{display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border-radius:6px;background:#30283e;font-size:10px;font-weight:800}
+.rp-connection-state.good{color:#9ce8b3;background:#193426}
+.rp-connection-state.bad{color:#ffaaaa;background:#3b2020}
+.rp-event-meta{display:flex;gap:12px;flex-wrap:wrap;margin-top:7px;color:var(--muted);font-size:11px}
+.rp-event.alarm{border-color:#9b744c;background:linear-gradient(145deg,#30251f,#191525)}
+.rp-event.player-event{border-left:3px solid #8d70bb}
+.rp-section-note{margin-top:9px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:11px;line-height:1.6}
 @media(max-width:650px){.rp-connections,.rp-device-grid{grid-template-columns:1fr}.rp-panel-head{align-items:flex-start}}
 
 
@@ -1031,18 +1039,30 @@ function getEventSquare(event) {
 function getEventTitle(event){
   const type=String(event.event_type||"").toLowerCase();
 
-  if(type.includes("team_death")||type.includes("death")){
-    return "☠️ Смерть участника команды";
+  if(type.includes("alarm")||type.includes("smart_alarm")){
+    return "◉ Сработала Сигнализация";
   }
-
+  if(type.includes("respawn")||type.includes("revive")){
+    return "↻ Игрок возродился";
+  }
+  if(type.includes("team_death")||type.includes("death")){
+    return "☠️ Игрок умер";
+  }
+  if(type.includes("join")||type.includes("connected")||type.includes("player_online")){
+    return "● Игрок вошёл в игру";
+  }
+  if(type.includes("leave")||type.includes("disconnect")||type.includes("player_offline")){
+    return "○ Игрок вышел из игры";
+  }
+  if(type.includes("position")||type.includes("move")){
+    return "⌖ Изменение позиции игрока";
+  }
   if(type.includes("heli")||type.includes("helicopter")){
     return "🚁 Событие с патрульным вертолётом";
   }
-
   if(type.includes("cargo")){
     return "🚢 Событие Cargo";
   }
-
   return "📡 "+String(event.event_type||"Событие Rust+");
 }
 
@@ -1062,7 +1082,8 @@ async function loadRustPlusEvents(){
     }
 
     const events=(Array.isArray(data.events)?data.events:[])
-      .filter(event=>String(event.event_type||"").toLowerCase()!=="player_position");
+      .slice()
+      .sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
 
     if(!events.length){
       list.innerHTML=`
@@ -1079,15 +1100,26 @@ async function loadRustPlusEvents(){
       const square=getEventSquare(event);
       const title=getEventTitle(event);
       const time=formatEventTime(event.created_at);
+      const type=String(event.event_type||"").toLowerCase();
+      const data=event.event_data||{};
+      const isAlarm=type.includes("alarm");
+      const isPlayerEvent=/death|respawn|revive|join|leave|disconnect|position|move/.test(type);
+      const steamId=data.steam_id||data.steamId||event.steam_id||"";
+      const serverIp=event.server_ip||"";
 
       return `
-        <div class="rp-event">
+        <div class="rp-event ${isAlarm?"alarm":isPlayerEvent?"player-event":""}">
           <h4>${escapeHTML(title)}</h4>
           <p>
             Игрок: <strong>${escapeHTML(player)}</strong><br>
-            Квадрат: <strong>${escapeHTML(square)}</strong><br>
+            Квадрат / координаты: <strong>${escapeHTML(square)}</strong><br>
             Время: ${escapeHTML(time)}
           </p>
+          <div class="rp-event-meta">
+            ${steamId?`<span>SteamID: ${escapeHTML(steamId)}</span>`:""}
+            ${serverIp?`<span>Сервер: ${escapeHTML(serverIp)}</span>`:""}
+            <span>Тип: ${escapeHTML(event.event_type||"—")}</span>
+          </div>
         </div>
       `;
     }).join("");
@@ -1216,8 +1248,8 @@ async function loadRustPlusProfile(){
         </article>
         <article class="panel rp-device">
           <div class="rp-device-icon">◉</div><div><h3>СИГНАЛИЗАЦИЯ</h3><p class="muted">Smart Alarm и уведомления о событиях базы.</p></div>
-          <div class="status neutral">Статус датчика пока не предоставляется API сайта.</div>
-          <p class="rp-hint">Worker должен передавать события сигнализации в Supabase, чтобы они появились в ленте.</p>
+          <div class="status neutral">Ожидание подтверждённого события из истории Rust+.</div>
+          <p class="rp-hint">Событие появится в ленте, только если Worker запишет его в rustplus_events. Отправка сообщения в Team Chat сама по себе не подтверждает состояние датчика на сайте.</p>
         </article>
       </div>
       <div class="rp-device-grid">
@@ -1258,8 +1290,11 @@ async function loadRustPlusProfile(){
 
       <div id="rp-save-msg" style="margin-top:12px;font-size:12px;color:var(--green)"></div>
 
+      <div class="rp-section-note">
+        Страница получает только данные, которые опубликованы через API сайта. Текущий API отдаёт подключения и историю rustplus_events; отдельные статусы Worker, CompanionBridge и подтверждения Team Chat пока не передаются, поэтому сайт не будет показывать их как «онлайн» без реального источника.
+      </div>
       <div class="panel" style="margin-top:20px">
-        <h3>☠️ СОБЫТИЯ КОМАНДЫ</h3>
+        <h3>📡 ИСТОРИЯ СОБЫТИЙ RUST+</h3>
 
         <p class="muted" style="margin-bottom:12px">
           История обнаруженных событий Rust+.
@@ -1287,6 +1322,7 @@ async function loadRustPlusProfile(){
     rustPlusEventsTimer=setInterval(()=>{
       if(document.visibilityState==="visible"){
         loadRustPlusEvents();
+        loadRustPlusConnections();
       }
     },15000);
 
