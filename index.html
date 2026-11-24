@@ -921,7 +921,8 @@ async function loadRustPlusEvents(){
       throw new Error(data.error||"Ошибка загрузки событий");
     }
 
-    const events=Array.isArray(data.events)?data.events:[];
+    const events=(Array.isArray(data.events)?data.events:[])
+      .filter(event=>String(event.event_type||"").toLowerCase()!=="player_position");
 
     if(!events.length){
       list.innerHTML=`
