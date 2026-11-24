@@ -213,6 +213,28 @@ footer{background:#0d1511;border-top-color:#263b30}
   *,*::before,*::after{scroll-behavior:auto!important;transition:none!important}
 }
 
+
+/* Rust+ dashboard */
+.rp-dashboard{margin-top:18px;padding:18px}
+.rp-panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.rp-panel-head h3{margin-bottom:5px}
+.rp-connections{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.rp-connection{min-width:0;padding:14px;border:1px solid var(--border);border-radius:10px;background:#0e1712}
+.rp-connection-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.rp-connection-name{font-weight:800;overflow-wrap:anywhere}
+.rp-connection-meta{margin-top:9px;color:var(--muted);font-size:12px;line-height:1.7;overflow-wrap:anywhere}
+.rp-live{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;color:var(--green)}
+.rp-live::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 10px currentColor}
+.rp-dead{color:var(--red)}
+.rp-device-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px}
+.rp-device{display:flex;flex-direction:column;gap:10px;padding:17px}
+.rp-device h3{margin:0}
+.rp-device-icon{width:38px;height:38px;display:grid;place-items:center;border-radius:10px;background:#173b27;color:#8cf0ae;font-size:22px}
+.rp-command-row{display:flex;gap:8px;flex-wrap:wrap}
+.rp-command-row button{flex:1;min-width:110px}
+.rp-hint{font-size:11px;color:var(--muted);line-height:1.6}
+@media(max-width:650px){.rp-connections,.rp-device-grid{grid-template-columns:1fr}.rp-panel-head{align-items:flex-start}}
+
 </style>
 </head>
 
@@ -1047,6 +1069,38 @@ async function loadRustPlusEvents(){
   }
 }
 
+
+/* Rust+ connections and command shortcuts */
+async function loadRustPlusConnections(){
+  const list=$("rp-connections-list");
+  if(!list)return;
+  list.innerHTML='<div class="loading">Обновляем подключения...</div>';
+  try{
+    const response=await fetch("/api/rustplus-status",{cache:"no-store"});
+    const data=await response.json();
+    if(!response.ok)throw new Error(data.error||"Не удалось получить подключения");
+    const connections=Array.isArray(data.connections)?data.connections:[];
+    if(!connections.length){list.innerHTML='<div class="empty">Пока нет подключений Rust+ для этого Steam-аккаунта.</div>';return;}
+    list.innerHTML='<div class="rp-connections">'+connections.map(c=>{
+      const raw=String(c.status||"unknown"), normalized=raw.toLowerCase();
+      const online=["connected","online","active","подключён","подключен"].includes(normalized);
+      const label=online?"ПОДКЛЮЧЁН":raw==="unknown"?"СТАТУС НЕИЗВЕСТЕН":raw.toUpperCase();
+      const lastSeen=c.last_seen?formatEventTime(c.last_seen):"Нет данных";
+      return '<article class="rp-connection"><div class="rp-connection-top"><div class="rp-connection-name">'+escapeHTML(c.server_name||"Сервер Rust")+'</div><span class="rp-live '+(online?"":"rp-dead")+'">'+escapeHTML(label)+'</span></div><div class="rp-connection-meta">IP: '+escapeHTML(c.server_ip||"—")+'<br>Последняя активность: '+escapeHTML(lastSeen)+'</div></article>';
+    }).join("")+'</div>';
+  }catch(error){list.innerHTML='<div class="status bad">'+escapeHTML(error.message)+'</div>';}
+}
+async function copyRustCommand(command){
+  try{
+    await navigator.clipboard.writeText(command);
+    const msg=$("rp-save-msg");
+    if(msg){msg.style.color="var(--green)";msg.textContent="Скопировано: "+command+". Отправь команду в чат команды Rust+.";}
+  }catch{
+    const msg=$("rp-save-msg");
+    if(msg){msg.style.color="var(--red)";msg.textContent="Не удалось скопировать. Разреши доступ к буферу обмена.";}
+  }
+}
+
 /* Загрузка профиля Rust+ */
 
 async function loadRustPlusProfile(){
@@ -1115,11 +1169,29 @@ async function loadRustPlusProfile(){
         </a>
       </div>
 
-      <div class="status neutral">
-        🟡 <b>Rust+ ещё не подключён.</b><br>
-        Авторизация Steam выполнена. Для получения игровых событий нужно отдельно настроить подключение Rust+.
+      <div class="panel rp-dashboard">
+        <div class="rp-panel-head">
+          <div><h3>ПОДКЛЮЧЁННЫЕ СЕРВЕРЫ RUST+</h3><p class="muted">Статус соединений из базы Rust Radar.</p></div>
+          <button class="secondary" type="button" onclick="loadRustPlusConnections()">↻ ОБНОВИТЬ</button>
+        </div>
+        <div id="rp-connections-list"><div class="loading">Проверяем подключения...</div></div>
       </div>
-
+      <div class="rp-device-grid">
+        <article class="panel rp-device">
+          <div class="rp-device-icon">⌁</div><div><h3>ТУРЕЛИ</h3><p class="muted">Команды для Smart Switch через командный чат Rust+.</p></div>
+          <div class="rp-command-row"><button type="button" onclick="copyRustCommand('турели вкл')">ВКЛЮЧИТЬ</button><button type="button" class="secondary" onclick="copyRustCommand('турели выкл')">ВЫКЛЮЧИТЬ</button></div>
+          <p class="rp-hint">Кнопки копируют команду. Отправь её в командный чат Rust+ на нужном сервере.</p>
+        </article>
+        <article class="panel rp-device">
+          <div class="rp-device-icon">◉</div><div><h3>СИГНАЛИЗАЦИЯ</h3><p class="muted">Smart Alarm и уведомления о событиях базы.</p></div>
+          <div class="status neutral">Статус датчика пока не предоставляется API сайта.</div>
+          <p class="rp-hint">Worker должен передавать события сигнализации в Supabase, чтобы они появились в ленте.</p>
+        </article>
+      </div>
+      <div class="rp-device-grid">
+        <article class="panel rp-device"><div class="rp-device-icon">⚓</div><div><h3>НЕФТЯНЫЕ ВЫШКИ</h3><p class="muted">Малая и большая нефтянка.</p></div><div class="status neutral">Ожидает источник событий от Worker.</div></article>
+        <article class="panel rp-device"><div class="rp-device-icon">📦</div><div><h3>КРЕЙТЫ И CHINOOK</h3><p class="muted">События вертолёта и контейнеров.</p></div><div class="status neutral">Ожидает источник событий от Worker.</div></article>
+      </div>
       <div class="rp-settings">
 
         <label class="favorite-filter">
@@ -1174,6 +1246,7 @@ async function loadRustPlusProfile(){
     `;
 
     await loadRustPlusEvents();
+    await loadRustPlusConnections();
 
     if(rustPlusEventsTimer){
       clearInterval(rustPlusEventsTimer);
