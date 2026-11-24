@@ -127,6 +127,92 @@ footer{margin-top:40px;padding:28px 20px;background:#17191d;border-top:1px solid
  .server-card{padding:13px}
 }
 @media(max-width:380px){.filters{grid-template-columns:1fr}.profile-head{align-items:flex-start}.avatar{width:62px;height:62px}}
+
+/* RUST RADAR — обновлённая визуальная тема */
+:root{
+  --bg:#0b100e;
+  --panel:#111a16;
+  --panel2:#17231d;
+  --border:#263b30;
+  --orange:#63df91;
+  --orange2:#83f0aa;
+  --text:#eaf4ed;
+  --muted:#91a79a;
+  --green:#63df91;
+  --red:#ff7777;
+}
+body{
+  background:
+    radial-gradient(ellipse at 50% -15%,rgba(48,145,87,.13),transparent 48%),
+    var(--bg);
+  color:var(--text);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+button{
+  border-radius:9px;
+  background:linear-gradient(135deg,#39b96d,#23864d);
+  box-shadow:0 5px 18px rgba(35,134,77,.16);
+}
+button:hover{background:linear-gradient(135deg,#55d987,#2e9e5d);transform:translateY(-1px)}
+input,select{
+  background:#0d1511;
+  border-color:#294033;
+  border-radius:9px;
+}
+input:focus,select:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(99,223,145,.10)}
+a{color:var(--orange)}
+header{
+  position:sticky;
+  top:0;
+  z-index:20;
+  background:rgba(13,21,17,.91);
+  backdrop-filter:blur(14px);
+  border-bottom-color:#263b30;
+}
+.logo{letter-spacing:1.5px}
+nav a{transition:color .18s ease}
+nav a:hover{color:var(--orange);text-decoration:none}
+.hero{
+  background:
+    radial-gradient(ellipse at 50% 0%,rgba(52,175,99,.18),transparent 62%),
+    linear-gradient(180deg,#101b15,#0b100e);
+}
+.hero h1{letter-spacing:2px}
+.section-title{letter-spacing:.5px}
+.feature,.toolbar,.server-card,.result,.empty,.message,.panel{
+  border-color:#263b30;
+  border-radius:13px;
+  box-shadow:0 8px 28px rgba(0,0,0,.14);
+}
+.feature,.toolbar,.server-card,.result{background:linear-gradient(145deg,#142019,#101813)}
+.feature{transition:transform .2s ease,border-color .2s ease}
+.feature:hover{transform:translateY(-2px);border-color:#3c7652}
+.server-card{transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease}
+.server-card:hover{
+  border-color:#43885b;
+  transform:translateY(-2px);
+  box-shadow:0 12px 30px rgba(0,0,0,.22);
+}
+.server-country,.tag,.info-item,.stat-row,.rp-event{
+  background:#0e1712;
+}
+.tag.orange-tag{background:#173b27;color:#8cf0ae}
+.secondary,.details,.favorite-btn{background:#26362d;color:#dcebe0}
+.secondary:hover,.details:hover,.favorite-btn:hover{background:#344a3b}
+.favorite-filter input{accent-color:var(--green)}
+.favorite-btn.active{color:#8cf0ae;background:#173b27}
+.connect{background:linear-gradient(135deg,#39b96d,#23864d);color:white}
+.avatar{border-color:var(--green)}
+.profile-name,.stat strong,.panel h3,.rp-event h4{color:var(--green)}
+.stat{background:#142019;border-color:#294033}
+.status.neutral{background:#26351f;color:#c9e69b}
+.rp-event{border-radius:10px}
+footer{background:#0d1511;border-top-color:#263b30}
+::selection{background:rgba(99,223,145,.25);color:#fff}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;transition:none!important}
+}
+
 </style>
 </head>
 
